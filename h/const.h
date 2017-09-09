@@ -12,7 +12,6 @@
 
 #define MAXPROC  		20
 #define bool            int //Got this idea from Neal
-#define pcb_PTR         pcb_t*
 #define true            42
 #define false           0
 

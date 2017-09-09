@@ -12,24 +12,30 @@
 /* process table entry type */
 typedef struct pcb_t
 {
+    struct pcb_t
     /* process queue fields */
-    struct pcb_t  
         *p_next,		// ptr to next entry 
-        *p_previous,     // ptr to previous entry   **NYI**
-
-
-    /* process tree fields */
-    struct pcb_t   
+        *p_prev;       // ptr to previous entry   **NYI**
+    struct pcb_t
+    /* process tree fields */ 
         *p_prnt,        // ptr to parent  
         *p_child,		// ptr to 1st child 
-        *p_sib,	        // ptr to next sibling
+        *p_sib;	        // ptr to next sibling
 
     /* process status information */
-    state_t	   p_s;			//processor state
-    int		    *p_semAdd;	//ptr to semaphore on
-    /* which proc is blocked */
-}  
+    state_t p_s;		//processor state
+    int*	p_semAdd;   //ptr to semaphore on
 
+    /* which proc is blocked */
+}
 pcb_t, *pcb_PTR;
+
+typedef struct semd_t
+{
+    struct semd_t*  s_next;
+    int*            s_semAdd;
+    pcb_PTR         s_tp;
+}
+semd_t;
 
 #endif
