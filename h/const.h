@@ -12,7 +12,8 @@
 
 #define MAXPROC  		20
 #define bool            int //Got this idea from Neal
-#define true            42
 #define false           0
+#define true            !false
+
 
 #endif

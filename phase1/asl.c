@@ -2,7 +2,7 @@
 #include "../h/types.h"
 #include "../e/pcb.e"
 
-HIDDEN semd_t *semd_h, *semdFree_h;
+HIDDEN semd_t* semd_h, *semdFree_h;
 
 /* 
 Initialize the semdFree list to contain all the elements of the array
@@ -12,8 +12,19 @@ tion.
  */
  void initASL()
  {
-    static semd_t semdTable[MAXPROC];
+    static semd_t* semdTable[MAXPROC+2];
 
+    semdTable[MAXPROC+1]->s_semAdd = 0;
+    insertProcQ(&semdFree_h, (semdTable[MAXPROC+1]));
+
+    for(int i=0; i<MAXPROC; i++)
+    {
+      semdTable[i]->s_semAdd=&semdTable[i];
+      insertProcQ(&semdFree_h, (semdTable[i]));
+    }
+
+    semdTable[MAXPROC+1]->s_semAdd = INT_MAX;
+    insertProcQ(&semdFree_h, (semdTable[MAXPROC+2]));
  }
  
 /* 
@@ -26,9 +37,10 @@ to semAdd, and s procq to mkEmptyProcQ()), and proceed as
 above. If a new semaphore descriptor needs to be allocated and the
 semdFree list is empty, return TRUE. In all other cases return FALSE.
 */
-int insertBlocked(int *semAdd, pcb_PTR p)
+bool insertBlocked(int *semAdd, pcb_PTR p)
 {
-
+   p->p_semAdd = semAdd;
+   insertProcQ(((semd_t) *semAdd)->s_tp, p);
 }
 
 /* 

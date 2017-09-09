@@ -18,11 +18,11 @@ Initializes our 20(MAXPROC) PCBs
 */
 void initPcbs()
 {
-  static pcb_PTR initNodes[MAXPROC];
+  static pcb_PTR pcbTable[MAXPROC];
   
   for(int i=0; i<MAXPROC; i++)
   {
-    insertProcQ(&pcbFree_h, (initNodes[i]));
+    insertProcQ(&pcbFree_h, (pcbTable[i]));
   }
 }
 
@@ -51,6 +51,7 @@ pcb_PTR allocPcb()
   temp->p_child = NULL;
   temp->p_prnt  = NULL;
   temp->p_sib   = NULL;
+  temp->p_presib = NULL;
   return temp;
 
 }
@@ -114,6 +115,7 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
     pcb_PTR temp;
     temp  = *tp;
     tp    = NULL;
+    freePcb(temp);    
     return  temp;
   }
   //If there are only two nodes, we need to set tp's previous to itself after removal
@@ -124,13 +126,15 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
     (*tp)->p_next = *tp;
     (*tp)->p_prev = *tp;
     temp->p_next  = NULL;
+    freePcb(temp);    
     return temp;
   }
 
   pcb_PTR temp;
   temp = (*tp)->p_next;
   (*tp)->p_next = temp->p_next;
-  temp->p_next = NULL;
+  temp->p_next  = NULL;
+  freePcb(temp);
   return temp;
 }
 
@@ -143,7 +147,31 @@ can point to any element of the process queue.
 */
 pcb_PTR outProcQ(pcb_PTR* tp, pcb_PTR p)
 {
- //TODO
+ if (emptyProcQ(*tp)) return NULL;
+
+ pcb_PTR temp = *tp;
+ while(temp->p_next != *tp)
+ {
+  if (temp->p_next == p)
+  {
+    temp->p_prev->p_next = temp->p_next;
+    temp->p_next->p_prev = temp->p_prev;
+
+    temp->p_next = NULL;
+    temp->p_prev = NULL;
+    freePcb(temp);
+    return temp;
+  }
+  temp = temp->p_next;
+ }
+
+ if ((*tp)->p_next ==*tp && *tp==p)
+ {
+  *tp = NULL;
+  freePcb(temp);
+  return temp;
+ }
+ return NULL;
 }
 
 /*
@@ -172,13 +200,33 @@ void insertChild(pcb_PTR prnt, pcb_PTR p)
   //Check if prnt already has a child, then do... something
   if (!emptyChild(prnt))
   {
-    //TODO
-    //I guess we have to make a sibling?
+    p->p_sib = prnt->p_child;
+    p->p_sib->p_presib=p;
+    prnt->p_child = p;
+    p->p_prnt = prnt;
   }
   else
   {
     prnt->p_child = p;
+    p->p_prnt = prnt;
   }
+}
+
+void killAllChildren(pcb_PTR p)
+{
+  if (p->p_child == NULL) return;
+
+  while (!(emptyChild(p->p_child)))
+  {
+    pcb_PTR temp = p->p_child;
+    killAllChildren(p->p_child);
+    p->p_child = p->p_child->p_sib;
+    p->p_child->p_presib = NULL;
+
+    temp->p_prnt = NULL;
+    temp->p_sib  = NULL;
+    freePcb(temp);
+  }  
 }
 
 /* Make the first child of the ProcBlk pointed to by p no longer a
@@ -187,8 +235,18 @@ Otherwise, return a pointer to this removed first child ProcBlk. */
 pcb_PTR removeChild(pcb_PTR p)
 {
   if (p->p_child == NULL) return NULL;
-  p->p_child == NULL;
+
+  pcb_PTR temp   = p->p_child;
+  p->p_child     = temp->p_sib;
+  temp->p_presib = NULL;
+  temp->p_prnt     = NULL;
+  
+  killAllChildren(temp);
+  freePcb(temp);
+
+  return temp;
 }
+
 
 /* Make the ProcBlk pointed to by p no longer the child of its parent.
 If the ProcBlk pointed to by p has no parent, return NULL; otherwise,
@@ -196,6 +254,18 @@ return p. Note that the element pointed to by p need not be the first
 child of its parent. */
 pcb_PTR outChild(pcb_PTR p)
 {
-  //TODO
+  if (p->p_prnt == NULL) return NULL;
+
+
+  if(p->p_presib) p->p_presib->p_sib = p->p_sib;
+  if(p->p_sib)    p->p_sib->p_presib = p->p_presib;
+
+  if (p->p_presib == NULL) p->p_prnt->p_child = p->p_sib;
+
+  killAllChildren(p);
+  p->p_sib    = NULL;
+  p->p_presib = NULL;
+  p->p_prnt   = NULL;
+  return p;
 }
 
