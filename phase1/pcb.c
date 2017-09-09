@@ -1,3 +1,12 @@
+/*
+Currently have some concerns about initPcbs, FreePcb, allocPcb, inserProcQ, and removeProcQ.
+Mainly with getting pointers to pointers to interact and compile without error. 
+
+initPcbs and freePcb call insterProcQ with the address of pcbFree (&pcbFree)
+allocPcb does the same with removeProcQ
+insert and remove require the dereferencing of every ues of tp, which seems like the wrong thing to do.
+*/
+
 #include "../h/const.h"
 #include "../h/types.h"
 #include "../e/pcb.e"
@@ -13,7 +22,7 @@ void initPcbs()
   
   for(int i=0; i<MAXPROC; i++)
   {
-    insertProcQ(pcbFree_h, &(initNodes[i]));
+    insertProcQ(&pcbFree_h, (initNodes[i]));
   }
 }
 
@@ -22,7 +31,7 @@ Insert the element pointed to by p onto the pcbFree list.
 */
 void freePcb(pcb_PTR p)
 {
-  insertProcQ(pcbFree_h, p);
+  insertProcQ(&pcbFree_h, p);
 }
 
 /* 
@@ -35,7 +44,7 @@ gets reallocated.
 */
 pcb_PTR allocPcb()
 {
-  pcb_PTR temp = removeProcQ(pcbFree_h);
+  pcb_PTR temp = removeProcQ(&pcbFree_h);
 
   temp->p_next  = NULL;
   temp->p_prev  = NULL;
@@ -76,13 +85,13 @@ void insertProcQ(pcb_PTR* tp, pcb_PTR p)
   if(emptyProcQ(*tp))
   {
     p->p_next = p;
-    p->prev   = p;
+    p->p_prev = p;
     *tp = p;
   }
   else
   {
     p->p_next = (*tp)->p_next;
-    p->prev   = *tp
+    p->p_prev = *tp;
     (*tp)->p_next = p;
     *tp = p;
   }
@@ -112,8 +121,8 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
   {
     pcb_PTR temp;
     temp  = (*tp)->p_next;
-    (*tp)->p_next = *tp
-    (*tp)->p_prev = *tp
+    (*tp)->p_next = *tp;
+    (*tp)->p_prev = *tp;
     temp->p_next  = NULL;
     return temp;
   }
