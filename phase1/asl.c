@@ -2,7 +2,7 @@
 #include "../h/types.h"
 #include "../e/pcb.e"
 
-HIDDEN semd_t* semd_h, *semdFree_h;
+HIDDEN semd_t* semdActiveList_h, *semdFreeList_h;
 
 /* 
 Initialize the semdFree list to contain all the elements of the array
@@ -17,29 +17,14 @@ tion.
     for(int i=0; i<MAXPROC; i++)
     {
       semdTable[i]->s_semAdd = &semdTable[i];
-      insertProcQ(&semdFree_h, (semdTable[i])); //this wont work for semaphores
+      freePcb(semdTable[i]);
     }
 
     semdTable[MAXPROC+1]->s_semAdd = 0;
-    insertProcQ(&semdFree_h, (semdTable[MAXPROC+1]));
+    freePcb(semdTable[MAXPROC+1]);
 
     semdTable[MAXPROC+1]->s_semAdd = MAX_INT;
-    insertProcQ(&semdFree_h, (semdTable[MAXPROC+2]));
- }
-
- semd_t *find(int *semAdd)
- {
-    semd_t* temp = semd_h;
-
-    /*
-    While we are not at the end of the list, move down the list
-    (I'm assuming it's in ascending order)
-    */
-    while(temp->s_next->s_semAdd < semAdd)
-    {
-		temp = temp->s_next;
-	}
-	return temp;
+    freePcb(semdTable[MAXPROC+2]);
 }
  
 /* 
@@ -54,7 +39,11 @@ semdFree list is empty, return TRUE. In all other cases return FALSE.
 */
 bool insertBlocked(int *semAdd, pcb_PTR p)
 {
-   p->p_semAdd = semAdd;
+   semd_t* temp = find(semAdd);
+   if (temp->semAdd != semAdd)
+   {
+       //TODO
+   }
 }
 
 /* 
@@ -67,7 +56,22 @@ descriptor from the ASL and return it to the semdFree list.
 */
 pcb_PTR removeBlocked(int *semAdd)
 {
+    pcb_PTR temp = find(semAdd)
+    pcb_PTR ret;
 
+    if (temp == semAdd)
+    {
+        ret = removeProcQ(temp->s_tp);
+        //Was that the last pcb?
+        if (emptyProcQ(s_tp)
+        {
+            //Free up the semd
+            freeSemd(temp)
+        }
+        return ret;
+    }
+    //If we didn't find it...
+    return NULL;
 }
 
 /* 
@@ -79,7 +83,7 @@ return p.
 */
 pcb_PTR outBlocked(pcb_PTR p)
 {
-
+    //TODO
 }
 
 /* 
@@ -90,5 +94,48 @@ ated with semAdd is empty.
  */
 pcb_PTR headBlocked(int *semAdd)
 {
+    //Search the list for a semd holding the given semAdd
+    pcb_PTR temp = find(semAdd);
+    //Return the head of the pcb at that semAdd
+    if (temp == semAdd)
+    {
+        return temp->s_tp->p_next;
+    }
 
+    //If we didn't find it...
+    return NULL;
+}
+
+semd_t* find(int* semAdd)
+{
+    //we don't like wild goose chases
+    if (semAdd == NULL) return NULL;
+
+    semd_t* temp = semdActiveList_h;
+
+   /*
+   While we are not at the end of the list, move down the list
+   (I'm assuming it's in ascending order)
+   */
+   while(temp->s_next->s_semAdd < semAdd)
+   {
+       temp = temp->s_next;
+   }
+   return temp;
+}
+
+/*
+analogous to pcb_t's freePcb because we need a way to free up semd structs
+*/
+void freeSemd(semd_t* s)
+{
+    //TODO!!
+}
+
+/*
+Analogous to pcb_t's allocPcb because we need a way to pull semd structs from the free list
+*/
+semd_t* allocSemd()
+{
+    //TODO
 }

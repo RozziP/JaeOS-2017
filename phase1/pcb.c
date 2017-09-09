@@ -1,17 +1,10 @@
-/*
-Currently have some concerns about initPcbs, FreePcb, allocPcb, inserProcQ, and removeProcQ.
-Mainly with getting pointers to pointers to interact and compile without error. 
 
-initPcbs and freePcb call insterProcQ with the address of pcbFree (&pcbFree)
-allocPcb does the same with removeProcQ
-insert and remove require the dereferencing of every ues of tp, which seems like the wrong thing to do.
-*/
 
 #include "../h/const.h"
 #include "../h/types.h"
 #include "../e/pcb.e"
 
-HIDDEN pcb_PTR pcbFree_h;
+HIDDEN pcb_PTR pcbFreeList_h;
 
 /*
 Initializes our 20(MAXPROC) PCBs
@@ -31,7 +24,7 @@ Insert the element pointed to by p onto the pcbFree list.
 */
 void freePcb(pcb_PTR p)
 {
-  insertProcQ(&pcbFree_h, p);
+  insertProcQ(&pcbFreeList_h, p);
 }
 
 /* 
@@ -44,14 +37,18 @@ gets reallocated.
 */
 pcb_PTR allocPcb()
 {
-  pcb_PTR temp = removeProcQ(&pcbFree_h);
+  pcb_PTR temp = removeProcQ(&pcbFreeList_h);
 
   temp->p_next  = NULL;
   temp->p_prev  = NULL;
+
   temp->p_child = NULL;
   temp->p_prnt  = NULL;
-  temp->p_nextSib   = NULL;
-  temp->p_prevSib = NULL;
+  temp->p_nextSib  = NULL;
+  temp->p_prevSib  = NULL;
+
+  temp->semAdd  = NULL
+  temp->p_s;    = NULL
   return temp;
 
 }
@@ -109,7 +106,7 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
   //Return null if the list is empty
   if (emptyProcQ(*tp)) return NULL;
 
-  //If there's only one node, don't worry about tp's p_next
+  //If there's only one node, don't worry about tp's next
   if((*tp)->p_next == *tp)
   {
     pcb_PTR temp;
@@ -147,13 +144,17 @@ can point to any element of the process queue.
 */
 pcb_PTR outProcQ(pcb_PTR* tp, pcb_PTR p)
 {
+  //Anyone home? No?
  if (emptyProcQ(*tp)) return NULL;
 
  pcb_PTR temp = *tp;
+ //Looping through the process queue
  while(temp->p_next != *tp)
  {
+   //Looking for p
   if (temp->p_next == p)
   {
+    //Restore the chain
     temp->p_prev->p_next = temp->p_next;
     temp->p_next->p_prev = temp->p_prev;
 
@@ -212,6 +213,9 @@ void insertChild(pcb_PTR prnt, pcb_PTR p)
   }
 }
 
+/*
+Recursively removes all descendants of the given parent node p
+*/
 void killAllChildren(pcb_PTR p)
 {
   if (p->p_child == NULL) return;
