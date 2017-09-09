@@ -9,7 +9,6 @@ Initializes our 20(MAXPROC) PCBs
 */
 void initPcbs()
 {
-  pcb_PTR pcbFree_h = mkEmptyProcQ();
   static pcb_PTR initNodes[MAXPROC];
   
   for(int i=0; i<MAXPROC; i++)
@@ -77,11 +76,13 @@ void insertProcQ(pcb_PTR* tp, pcb_PTR p)
   if(emptyProcQ(*tp))
   {
     p->p_next = p;
+    p->prev   = p;
     *tp = p;
   }
   else
   {
     p->p_next = (*tp)->p_next;
+    p->prev   = *tp
     (*tp)->p_next = p;
     *tp = p;
   }
@@ -105,6 +106,16 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
     temp  = *tp;
     tp    = NULL;
     return  temp;
+  }
+  //If there are only two nodes, we need to set tp's previous to itself after removal
+  if((*tp)->p_next == (*tp)->p_prev)
+  {
+    pcb_PTR temp;
+    temp  = (*tp)->p_next;
+    (*tp)->p_next = *tp
+    (*tp)->p_prev = *tp
+    temp->p_next  = NULL;
+    return temp;
   }
 
   pcb_PTR temp;

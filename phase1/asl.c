@@ -1,3 +1,5 @@
+#include "../h/const.h"
+#include "../h/types.h"
 #include "../e/pcb.e"
 
 HIDDEN semd_t *semd_h, *semdFree_h;
@@ -11,7 +13,7 @@ tion.
  void initASL()
  {
     static semd_t semdTable[MAXPROC];
-    
+
  }
  
 /* 
