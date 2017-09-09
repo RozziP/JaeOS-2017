@@ -22,7 +22,7 @@ void initPcbs()
   
   for(int i=0; i<MAXPROC; i++)
   {
-    insertProcQ(&pcbFree_h, (pcbTable[i]));
+    freePcb(pcbTable[i]);
   }
 }
 
@@ -50,8 +50,8 @@ pcb_PTR allocPcb()
   temp->p_prev  = NULL;
   temp->p_child = NULL;
   temp->p_prnt  = NULL;
-  temp->p_sib   = NULL;
-  temp->p_presib = NULL;
+  temp->p_nextSib   = NULL;
+  temp->p_prevSib = NULL;
   return temp;
 
 }
@@ -200,8 +200,8 @@ void insertChild(pcb_PTR prnt, pcb_PTR p)
   //Check if prnt already has a child, then do... something
   if (!emptyChild(prnt))
   {
-    p->p_sib = prnt->p_child;
-    p->p_sib->p_presib=p;
+    p->p_nextSib = prnt->p_child;
+    p->p_nextSib->p_prevSib=p;
     prnt->p_child = p;
     p->p_prnt = prnt;
   }
@@ -220,11 +220,11 @@ void killAllChildren(pcb_PTR p)
   {
     pcb_PTR temp = p->p_child;
     killAllChildren(p->p_child);
-    p->p_child = p->p_child->p_sib;
-    p->p_child->p_presib = NULL;
+    p->p_child = p->p_child->p_nextSib;
+    p->p_child->p_prevSib = NULL;
 
     temp->p_prnt = NULL;
-    temp->p_sib  = NULL;
+    temp->p_nextSib  = NULL;
     freePcb(temp);
   }  
 }
@@ -237,8 +237,8 @@ pcb_PTR removeChild(pcb_PTR p)
   if (p->p_child == NULL) return NULL;
 
   pcb_PTR temp   = p->p_child;
-  p->p_child     = temp->p_sib;
-  temp->p_presib = NULL;
+  p->p_child     = temp->p_nextSib;
+  temp->p_prevSib = NULL;
   temp->p_prnt     = NULL;
   
   killAllChildren(temp);
@@ -257,14 +257,14 @@ pcb_PTR outChild(pcb_PTR p)
   if (p->p_prnt == NULL) return NULL;
 
 
-  if(p->p_presib) p->p_presib->p_sib = p->p_sib;
-  if(p->p_sib)    p->p_sib->p_presib = p->p_presib;
+  if(p->p_prevSib) p->p_prevSib->p_nextSib = p->p_nextSib;
+  if(p->p_nextSib)    p->p_nextSib->p_prevSib = p->p_prevSib;
 
-  if (p->p_presib == NULL) p->p_prnt->p_child = p->p_sib;
+  if (p->p_prevSib == NULL) p->p_prnt->p_child = p->p_nextSib;
 
   killAllChildren(p);
-  p->p_sib    = NULL;
-  p->p_presib = NULL;
+  p->p_nextSib    = NULL;
+  p->p_prevSib = NULL;
   p->p_prnt   = NULL;
   return p;
 }

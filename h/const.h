@@ -14,6 +14,7 @@
 #define bool            int //Got this idea from Neal
 #define false           0
 #define true            !false
+#define MAX_INT         0xFFFFFFFF
 
 
 #endif

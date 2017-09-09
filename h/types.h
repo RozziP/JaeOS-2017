@@ -20,8 +20,8 @@ typedef struct pcb_t
     /* process tree fields */ 
         *p_prnt,        // ptr to parent  
         *p_child,       // ptr to 1st child 
-        *p_presib,      // ptr to previous sibling		
-        *p_sib;	        // ptr to next sibling
+        *p_prevSib,      // ptr to previous sibling		
+        *p_nextSib;	        // ptr to next sibling
 
     /* process status information */
     state_t p_s;		//processor state

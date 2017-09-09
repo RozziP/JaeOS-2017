@@ -14,18 +14,33 @@ tion.
  {
     static semd_t* semdTable[MAXPROC+2];
 
+    for(int i=0; i<MAXPROC; i++)
+    {
+      semdTable[i]->s_semAdd = &semdTable[i];
+      insertProcQ(&semdFree_h, (semdTable[i])); //this wont work for semaphores
+    }
+
     semdTable[MAXPROC+1]->s_semAdd = 0;
     insertProcQ(&semdFree_h, (semdTable[MAXPROC+1]));
 
-    for(int i=0; i<MAXPROC; i++)
-    {
-      semdTable[i]->s_semAdd=&semdTable[i];
-      insertProcQ(&semdFree_h, (semdTable[i]));
-    }
-
-    semdTable[MAXPROC+1]->s_semAdd = INT_MAX;
+    semdTable[MAXPROC+1]->s_semAdd = MAX_INT;
     insertProcQ(&semdFree_h, (semdTable[MAXPROC+2]));
  }
+
+ semd_t *find(int *semAdd)
+ {
+    semd_t* temp = semd_h;
+
+    /*
+    While we are not at the end of the list, move down the list
+    (I'm assuming it's in ascending order)
+    */
+    while(temp->s_next->s_semAdd < semAdd)
+    {
+		temp = temp->s_next;
+	}
+	return temp;
+}
  
 /* 
 Insert the ProcBlk pointed to by p at the tail of the process queue
@@ -40,7 +55,6 @@ semdFree list is empty, return TRUE. In all other cases return FALSE.
 bool insertBlocked(int *semAdd, pcb_PTR p)
 {
    p->p_semAdd = semAdd;
-   insertProcQ(((semd_t) *semAdd)->s_tp, p);
 }
 
 /* 
