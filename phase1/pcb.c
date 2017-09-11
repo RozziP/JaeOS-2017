@@ -11,11 +11,11 @@ Initializes our 20(MAXPROC) PCBs
 */
 void initPcbs()
 {
-  static pcb_PTR pcbTable[MAXPROC];
+  static pcb_t pcbTable[MAXPROC];
   
   for(int i=0; i<MAXPROC; i++)
   {
-    freePcb(pcbTable[i]);
+    freePcb(&pcbTable[i]);
   }
 }
 
@@ -37,18 +37,21 @@ gets reallocated.
 */
 pcb_PTR allocPcb()
 {
+  if (emptyProcQ(pcbFreeList_h)) return NULL;
+
   pcb_PTR temp = removeProcQ(&pcbFreeList_h);
 
-  temp->p_next  = NULL;
-  temp->p_prev  = NULL;
+  temp->p_next     = NULL;
+  temp->p_prev     = NULL;
 
-  temp->p_child = NULL;
-  temp->p_prnt  = NULL;
+  temp->p_child    = NULL;
+  temp->p_prnt     = NULL;
   temp->p_nextSib  = NULL;
   temp->p_prevSib  = NULL;
 
-  temp->semAdd  = NULL
-  temp->p_s;    = NULL
+  temp->p_semAdd   = NULL;
+  //temp->p_s      = ;
+
   return temp;
 
 }
@@ -111,8 +114,7 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
   {
     pcb_PTR temp;
     temp  = *tp;
-    tp    = NULL;
-    freePcb(temp);    
+    tp    = NULL;   
     return  temp;
   }
   //If there are only two nodes, we need to set tp's previous to itself after removal
@@ -122,8 +124,7 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
     temp  = (*tp)->p_next;
     (*tp)->p_next = *tp;
     (*tp)->p_prev = *tp;
-    temp->p_next  = NULL;
-    freePcb(temp);    
+    temp->p_next  = NULL;    
     return temp;
   }
 
@@ -131,7 +132,7 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
   temp = (*tp)->p_next;
   (*tp)->p_next = temp->p_next;
   temp->p_next  = NULL;
-  freePcb(temp);
+  temp->p_prev  = NULL;
   return temp;
 }
 
@@ -160,7 +161,7 @@ pcb_PTR outProcQ(pcb_PTR* tp, pcb_PTR p)
 
     temp->p_next = NULL;
     temp->p_prev = NULL;
-    freePcb(temp);
+    //freePcb(temp);
     return temp;
   }
   temp = temp->p_next;
@@ -245,8 +246,7 @@ pcb_PTR removeChild(pcb_PTR p)
   temp->p_prevSib = NULL;
   temp->p_prnt     = NULL;
   
-  killAllChildren(temp);
-  freePcb(temp);
+  //killAllChildren(temp); no don't
 
   return temp;
 }
@@ -266,7 +266,7 @@ pcb_PTR outChild(pcb_PTR p)
 
   if (p->p_prevSib == NULL) p->p_prnt->p_child = p->p_nextSib;
 
-  killAllChildren(p);
+  //killAllChildren(p); no don't
   p->p_nextSib    = NULL;
   p->p_prevSib = NULL;
   p->p_prnt   = NULL;

@@ -3,6 +3,11 @@
 #include "../e/pcb.e"
 
 HIDDEN semd_t* semdActiveList_h, *semdFreeList_h;
+HIDDEN semd_t* find(int* semAdd);
+HIDDEN semd_t* allocSemd();
+HIDDEN void freeSemd(semd_t* s);
+
+
 
 /* 
 Initialize the semdFree list to contain all the elements of the array
@@ -17,14 +22,14 @@ tion.
     for(int i=0; i<MAXPROC; i++)
     {
       semdTable[i]->s_semAdd = &semdTable[i];
-      freePcb(semdTable[i]);
+      freeSemd(semdTable[i]);
     }
 
     semdTable[MAXPROC+1]->s_semAdd = 0;
-    freePcb(semdTable[MAXPROC+1]);
+    freeSemd(semdTable[MAXPROC+1]);
 
     semdTable[MAXPROC+1]->s_semAdd = MAX_INT;
-    freePcb(semdTable[MAXPROC+2]);
+    freeSemd(semdTable[MAXPROC+2]);
 }
  
 /* 
@@ -40,7 +45,7 @@ semdFree list is empty, return TRUE. In all other cases return FALSE.
 bool insertBlocked(int *semAdd, pcb_PTR p)
 {
    semd_t* temp = find(semAdd);
-   if (temp->semAdd != semAdd)
+   if (temp->s_semAdd != semAdd)
    {
        //TODO
    }
@@ -56,17 +61,17 @@ descriptor from the ASL and return it to the semdFree list.
 */
 pcb_PTR removeBlocked(int *semAdd)
 {
-    pcb_PTR temp = find(semAdd)
+    semd_t* temp = find(semAdd);
     pcb_PTR ret;
 
     if (temp == semAdd)
     {
         ret = removeProcQ(temp->s_tp);
         //Was that the last pcb?
-        if (emptyProcQ(s_tp)
+        if (emptyProcQ(temp->s_tp))
         {
             //Free up the semd
-            freeSemd(temp)
+            freeSemd(temp);
         }
         return ret;
     }
@@ -95,7 +100,7 @@ ated with semAdd is empty.
 pcb_PTR headBlocked(int *semAdd)
 {
     //Search the list for a semd holding the given semAdd
-    pcb_PTR temp = find(semAdd);
+    semd_t* temp = find(semAdd);
     //Return the head of the pcb at that semAdd
     if (temp == semAdd)
     {
