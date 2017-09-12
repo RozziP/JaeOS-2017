@@ -6,6 +6,8 @@ HIDDEN semd_t* semdActiveList_h, *semdFreeList_h;
 HIDDEN semd_t* find(int* semAdd);
 HIDDEN semd_t* allocSemd();
 HIDDEN void freeSemd(semd_t* s);
+HIDDEN void insertSemd(semd_t* head, semd_t* s);
+HIDDEN semd_t* outSemd(semd_t* head, semd_t* s); 
 
 
 
@@ -17,19 +19,18 @@ tion.
  */
  void initASL()
  {
-    static semd_t* semdTable[MAXPROC+2];
+    static semd_t semdTable[MAXPROC+2];
 
     for(int i=0; i<MAXPROC; i++)
     {
-      semdTable[i]->s_semAdd = &semdTable[i];
-      freeSemd(semdTable[i]);
+      freeSemd(&semdTable[i]);
     }
 
-    semdTable[MAXPROC+1]->s_semAdd = 0;
-    freeSemd(semdTable[MAXPROC+1]);
+    semdTable[MAXPROC+1].s_semAdd = 0;
+    semdActiveList_h = &semdTable[MAXPROC+1];
 
-    semdTable[MAXPROC+1]->s_semAdd = MAX_INT;
-    freeSemd(semdTable[MAXPROC+2]);
+    semdTable[MAXPROC+1].s_semAdd = (int*)MAX_INT;
+    semdActiveList_h->s_next = &semdTable[MAXPROC+2];
 }
  
 /* 
@@ -42,13 +43,22 @@ to semAdd, and s procq to mkEmptyProcQ()), and proceed as
 above. If a new semaphore descriptor needs to be allocated and the
 semdFree list is empty, return TRUE. In all other cases return FALSE.
 */
-bool insertBlocked(int *semAdd, pcb_PTR p)
+bool insertBlocked(int* semAdd, pcb_PTR p)
 {
    semd_t* temp = find(semAdd);
-   if (temp->s_semAdd != semAdd)
+   if (temp == NULL)
    {
-       //TODO
+       temp = allocSemd();
+       temp->s_semAdd = semAdd;
+       insertSemd(semdActiveList_h, temp);
    }
+
+   insertProcQ(&temp->s_tp, p);
+   p->p_semAdd = semAdd;
+
+   if(semdFreeList_h) return TRUE;
+   return FALSE; 
+
 }
 
 /* 
@@ -61,12 +71,13 @@ descriptor from the ASL and return it to the semdFree list.
 */
 pcb_PTR removeBlocked(int *semAdd)
 {
-    semd_t* temp = find(semAdd);
     pcb_PTR ret;
+    semd_t* temp = find(semAdd);
+    if (temp->s_semAdd != semAdd) return NULL;
 
-    if (temp == semAdd)
+    if (temp->s_semAdd == semAdd)
     {
-        ret = removeProcQ(temp->s_tp);
+        ret = removeProcQ(&temp->s_tp);
         //Was that the last pcb?
         if (emptyProcQ(temp->s_tp))
         {
@@ -88,7 +99,10 @@ return p.
 */
 pcb_PTR outBlocked(pcb_PTR p)
 {
-    //TODO
+   semd_t* temp = find(p->p_semAdd);
+   if (temp->s_semAdd != p->p_semAdd || temp == NULL) return NULL;
+
+   return outProcQ(&temp->s_tp, p);
 }
 
 /* 
@@ -101,8 +115,10 @@ pcb_PTR headBlocked(int *semAdd)
 {
     //Search the list for a semd holding the given semAdd
     semd_t* temp = find(semAdd);
+    if (temp == NULL) return NULL;
+
     //Return the head of the pcb at that semAdd
-    if (temp == semAdd)
+    if (temp->s_semAdd == semAdd)
     {
         return temp->s_tp->p_next;
     }
@@ -111,6 +127,37 @@ pcb_PTR headBlocked(int *semAdd)
     return NULL;
 }
 
+void insertSemd(semd_t* head, semd_t* s)
+{
+
+    semd_t* temp = find(s->s_semAdd);
+    if (temp == NULL) return;
+
+    s->s_prev = temp->s_prev;
+    s->s_next = temp;
+
+    temp->s_prev->s_next = s;
+    temp->s_prev = s;
+}
+
+semd_t* outSemd(semd_t* head, semd_t* s)
+{
+    semd_t* temp = find(s->s_semAdd);
+    if (temp->s_semAdd != s->s_semAdd || temp == NULL) return NULL;
+
+    temp->s_next->s_prev = temp->s_prev;
+    temp->s_prev->s_next = temp->s_next;
+
+    temp->s_next = NULL;
+    temp->s_prev = NULL;
+}
+
+
+/*
+Searches the active semaphore list for a semaphore directory containing the given semAdd. 
+If the semAdd does not exist or is null, return NULL.
+If the semAdd is found, return its containing semaphore directory.
+*/
 semd_t* find(int* semAdd)
 {
     //we don't like wild goose chases
@@ -122,7 +169,7 @@ semd_t* find(int* semAdd)
    While we are not at the end of the list, move down the list
    (I'm assuming it's in ascending order)
    */
-   while(temp->s_next->s_semAdd < semAdd)
+   while(temp->s_next->s_semAdd <= semAdd)
    {
        temp = temp->s_next;
    }
@@ -134,7 +181,8 @@ analogous to pcb_t's freePcb because we need a way to free up semd structs
 */
 void freeSemd(semd_t* s)
 {
-    //TODO!!
+    semdFreeList_h->s_prev = s;
+    semdFreeList_h = s;
 }
 
 /*
@@ -142,5 +190,16 @@ Analogous to pcb_t's allocPcb because we need a way to pull semd structs from th
 */
 semd_t* allocSemd()
 {
-    //TODO
+    semd_t* temp = semdFreeList_h;
+
+    semdFreeList_h->s_prev = NULL;
+    semdFreeList_h = semdFreeList_h->s_next;
+
+    temp->s_next   = NULL;
+    temp->s_prev   = NULL;
+    temp->s_semAdd = NULL;
+    temp->s_tp     = NULL;
+
+    return temp;
+
 }
