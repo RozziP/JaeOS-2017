@@ -93,6 +93,7 @@ void insertProcQ(pcb_PTR* tp, pcb_PTR p)
   {
     p->p_next = (*tp)->p_next;
     p->p_prev = *tp;
+    (*tp)->p_next->p_prev = p;
     (*tp)->p_next = p;
     *tp = p;
   }
@@ -112,27 +113,20 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
   //If there's only one node, don't worry about tp's next
   if((*tp)->p_next == *tp)
   {
-    pcb_PTR temp;
-    temp  = *tp;
-    tp    = NULL;   
+    pcb_PTR temp = *tp;
+    *tp = NULL;   
     return  temp;
   }
-  //If there are only two nodes, we need to set tp's previous to itself after removal
-  if((*tp)->p_next == (*tp)->p_prev)
-  {
-    pcb_PTR temp;
-    temp  = (*tp)->p_next;
-    (*tp)->p_next = *tp;
-    (*tp)->p_prev = *tp;
-    temp->p_next  = NULL;    
-    return temp;
-  }
 
-  pcb_PTR temp;
-  temp = (*tp)->p_next;
-  (*tp)->p_next = temp->p_next;
+  //save the head to return
+  pcb_PTR temp = (*tp)->p_next;
+
+  (*tp)->p_next->p_next->p_prev = *tp;    //head's next's previous points to tp
+  (*tp)->p_next = (*tp)->p_next->p_next;  //tp's next points to head's next
+
   temp->p_next  = NULL;
   temp->p_prev  = NULL;
+  
   return temp;
 }
 
@@ -146,32 +140,50 @@ can point to any element of the process queue.
 pcb_PTR outProcQ(pcb_PTR* tp, pcb_PTR p)
 {
   //Anyone home? No?
- if (emptyProcQ(*tp)) return NULL;
+ if (emptyProcQ(*tp) || emptyProcQ(p)) return NULL;
 
  pcb_PTR temp = *tp;
+
+ //Is tp what we're looking for?
+ if (*tp == p)
+ {
+   //is tp the only element?
+  if ((*tp)->p_next == *tp)
+  {
+    *tp = NULL;
+  }
+  //tp is not the only element and we need to maintain the pointer
+  else
+  {
+    /*
+    temp and tp point to the same node at this point, but
+    I think it's clearer to use temp when we're changing fields,
+    and *tp when we're changing the pointer
+    */
+    temp->p_prev->p_next = temp->p_next;
+    temp->p_next->p_prev = temp->p_prev;
+    //set the new tail pointer
+    *tp = temp->p_prev;
+  }
+  return temp;
+ }
  //Looping through the process queue
  while(temp->p_next != *tp)
  {
    //Looking for p
   if (temp->p_next == p)
   {
+    temp = temp->p_next;
     //Restore the chain
     temp->p_prev->p_next = temp->p_next;
     temp->p_next->p_prev = temp->p_prev;
 
     temp->p_next = NULL;
     temp->p_prev = NULL;
-    //freePcb(temp);
+
     return temp;
   }
   temp = temp->p_next;
- }
-
- if ((*tp)->p_next ==*tp && *tp==p)
- {
-  *tp = NULL;
-  freePcb(temp);
-  return temp;
  }
  return NULL;
 }
