@@ -33,10 +33,7 @@ pcb_t, *pcb_PTR;
 
 typedef struct semd_t
 {
-    struct semd_t   
-        *s_next,
-        *s_prev;
-
+    struct semd_t* s_next;
     int*    s_semAdd;
     pcb_PTR s_tp;
 }
