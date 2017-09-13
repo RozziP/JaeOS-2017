@@ -276,10 +276,11 @@ void main() {
 	p = removeBlocked(&sem[11]);
 	if (insertBlocked(&sem[11],p))
 		adderrbuf("removeBlocked: fails to return to free list   ");
+		addokbuf("get past insertblock");
+		
 
 	if (insertBlocked(&onesem, procp[9]) == FALSE)
 		adderrbuf("insertBlocked: inserted more than MAXPROC   ");
-	
 	addokbuf("removeBlocked test started   \n");
 	for (i = 10; i< MAXPROC; i++) {
 		q = removeBlocked(&sem[i]);
