@@ -25,13 +25,13 @@ tion.
     }
 
     //Set up the dummy nodes with values 0 and MAX_INT
-    semdTable[MAXPROC+1].s_semAdd = 0;
-    semdTable[MAXPROC+1].s_next	= &semdTable[MAXPROC+2];
-    semdTable[MAXPROC+1].s_tp	= NULL;
+    semdTable[MAXPROC].s_semAdd = 0;
+    semdTable[MAXPROC].s_next	= &semdTable[MAXPROC+1];
+    semdTable[MAXPROC].s_tp	= NULL;
 
-    semdTable[MAXPROC+2].s_semAdd = (int*)MAX_INT;
-    semdTable[MAXPROC+2].s_next	= NULL;
-    semdTable[MAXPROC+2].s_tp	= NULL;
+    semdTable[MAXPROC+1].s_semAdd = (int*)MAX_INT;
+    semdTable[MAXPROC+1].s_next	= NULL;
+    semdTable[MAXPROC+1].s_tp	= NULL;
 
     semdActiveList_h = &semdTable[MAXPROC+1];
 }
@@ -88,7 +88,7 @@ turn a pointer to it. If the process queue for this semaphore becomes
 empty (emptyProcQ(s procq) is TRUE), remove the semaphore
 descriptor from the ASL and return it to the semdFree list. 
 */
-pcb_PTR removeBlocked(int *semAdd)
+pcb_PTR removeBlocked(int* semAdd)
 {
     pcb_PTR ret;
     semd_t* prnt = find(semAdd);
@@ -111,7 +111,6 @@ pcb_PTR removeBlocked(int *semAdd)
     //If we didn't find it...
     return NULL;
 }
-
 
 /* 
 Remove the ProcBlk pointed to by p from the process queue asso-
@@ -140,7 +139,6 @@ pcb_PTR outBlocked(pcb_PTR p)
     {
         //Remove the semd from the ASL and put it on the free list
         prnt->s_next   = child->s_next;
-        child->s_next  = NULL;
         freeSemd(child);
     }
     return ret;
