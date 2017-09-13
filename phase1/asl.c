@@ -1,3 +1,16 @@
+/*=======================================================================================*\
+  asl.c
+  Manages the active and free semaphore lists, which are
+  both singly linked, linear lists.
+  The active semaphore list contains two dummy nodes for ease of removal and insertion.
+
+  Any semaphore descriptor that is not in use is stored on the free list.
+  Any semaphore descriptor with a non-empty process queue is stored on the active list.
+  
+  Authors: Peter Rozzi and Patrick Gemperline
+  Date: 9-13-17
+\*=======================================================================================*/
+
 #include "../h/const.h"
 #include "../h/types.h"
 #include "../e/pcb.e"
@@ -33,10 +46,12 @@ tion.
     semdTable[MAXPROC+1].s_next	= NULL;
     semdTable[MAXPROC+1].s_tp	= NULL;
 
+    //place our dummy nodes into the active list
     semdActiveList_h = &semdTable[MAXPROC+1];
 }
 
 /*=========================================PROCESS BLOCK FUNCTIONS==============================================*\
+                These functions modify or access the process queue of a semaphore descriptor.
 \*==============================================================================================================*/
  
 /* 
@@ -134,7 +149,7 @@ pcb_PTR outBlocked(pcb_PTR p)
     //Was p not there?
     if (ret == NULL) return NULL;
 
-    //Is it empty now?
+    //Is the process queue empty?
     if (emptyProcQ(child->s_tp))
     {
         //Remove the semd from the ASL and put it on the free list
@@ -168,14 +183,14 @@ pcb_PTR headBlocked(int *semAdd)
 }
 
 /*=========================================ACTIVE LIST FUNCTIONS================================================*\
+                   These (this) function(s) access the semaphore directories on the active list
 \*==============================================================================================================*/
 
 
 /*
-Searches the active semaphore list for a semaphore directory containing the given semAdd. 
-If the semAdd is null, return NULL.
-If the semAdd is found, return its containing semaphore directory.
-If the semAdd does not exist, return the last non-dummy element of the list.
+Searches the active semaphore list for a semaphore descriptor containing the given semAdd. 
+If the semAdd is found, return the node above it
+If the semAdd does not exist, return the node above where it would be.
 */
 semd_t* find(int* semAdd)
 {
@@ -190,6 +205,7 @@ semd_t* find(int* semAdd)
 
 
 /*======================================FREE LIST MODIFIER FUNCTIONS============================================*\
+                        These functions modify semaphore directories on the free list.
 \*==============================================================================================================*/
 
 /*

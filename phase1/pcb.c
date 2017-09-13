@@ -1,4 +1,16 @@
+/*==========================================================================*\
+  pcb.c
+  Manages the active and free process queues and their child trees.
 
+  The queues are doubly linked, circular list.
+  The child trees are singly linked linear lists.
+
+  Any process control block that is not in use is stored on the free list.
+  Any process control block with that is in use is stored on the active list.
+  
+  Authors: Peter Rozzi and Patrick Gemperline
+  Date: 9-13-17
+\*==========================================================================*/
 
 #include "../h/const.h"
 #include "../h/types.h"
@@ -20,6 +32,7 @@ void initPcbs()
 }
 
 /*====================================PROCESS QUEUE MODIFIER FUNCTIONS==========================================*\
+                  These functions access and modify the elements of our process queues
 \*==============================================================================================================*/
 
 /* 
@@ -124,6 +137,7 @@ pcb_PTR removeProcQ(pcb_PTR* tp)
   //save the head to return
   pcb_PTR temp = (*tp)->p_next;
 
+  //restore the chain
   (*tp)->p_next->p_next->p_prev = *tp;    //head's next's previous points to tp
   (*tp)->p_next = (*tp)->p_next->p_next;  //tp's next points to head's next
 
@@ -140,93 +154,56 @@ pointer if necessary. If the desired entry is not in the indicated queue
 (an error condition), return NULL; otherwise, return p. Note that p
 can point to any element of the process queue. 
 */
-// pcb_PTR outProcQ(pcb_PTR* tp, pcb_PTR p)
-// {
-//   //Anyone home? No?
-//  if (emptyProcQ(*tp) || emptyProcQ(p)) return NULL;
 
-//  pcb_PTR temp = *tp;
+pcb_PTR outProcQ(pcb_PTR* tp, pcb_PTR p)
+{
+  //Anyone home? No?
+ if (emptyProcQ(*tp) || emptyProcQ(p)) return NULL;
 
-//  //Is tp what we're looking for?
-//  if (*tp == p)
-//  {
-//    //is tp the only element?
-//   if ((*tp)->p_next == *tp)
-//   {
-//     *tp = NULL;
-//   }
-//   //tp is not the only element and we need to maintain the pointer
-//   else
-//   {
-//     /*
-//     temp and tp point to the same node at this point, but
-//     I think it's clearer to use temp when we're changing fields,
-//     and *tp when we're changing the pointer
-//     */
-//     temp->p_prev->p_next = temp->p_next;
-//     temp->p_next->p_prev = temp->p_prev;
-//     //set the new tail pointer
-//     *tp = temp->p_prev;
-//   }
-//   return temp;
-//  }
-//  //Looping through the process queue
-//  while(temp->p_next != *tp)
-//  {
-//    //Looking for p
-//   if (temp->p_next == p)
-//   {
-//     temp = temp->p_next;
-//     //Restore the chain
-//     temp->p_prev->p_next = temp->p_next;
-//     temp->p_next->p_prev = temp->p_prev;
+ pcb_PTR temp = *tp;
 
-//     temp->p_next = NULL;
-//     temp->p_prev = NULL;
+ //Is tp what we're looking for?
+ if (*tp == p)
+ {
+   //is tp the only element?
+  if ((*tp)->p_next == *tp)
+  {
+    *tp = NULL;
+  }
+  //tp is not the only element and we need to maintain the pointer
+  else
+  {
+    /*
+    temp and tp point to the same node at this point, but
+    I think it's clearer to use temp when we're changing fields,
+    and *tp when we're changing the pointer
+    */
+    temp->p_prev->p_next = temp->p_next;
+    temp->p_next->p_prev = temp->p_prev;
+    //set the new tail pointer
+    *tp = temp->p_prev;
+  }
+  return temp;
+ }
+ //Looping through the process queue
+ while(temp->p_next != *tp)
+ {
+   //Looking for p
+  if (temp->p_next == p)
+  {
+    temp = temp->p_next;
+    //Restore the chain
+    temp->p_prev->p_next = temp->p_next;
+    temp->p_next->p_prev = temp->p_prev;
 
-//     return temp;
-//   }
-//   temp = temp->p_next;
-//  }
-//  return NULL;
-// }
-pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p) {
-	pcb_PTR ret, temp;
-	if(((*tp) == NULL) || (p == NULL)) {
-		return NULL;
-	}
-	/* only one thing in queue and it is what we want */
-	if((*tp) == p){
-		
-		if ((((*tp) -> p_next) == (*tp))) {
-			ret = (*tp);
-			(*tp) = mkEmptyProcQ();
-			return ret;
-		} else {
-			(*tp)->p_prev->p_next = (*tp)->p_next;
-			(*tp)->p_next->p_prev = (*tp)->p_prev;
-			*tp = (*tp)->p_prev;
-		}
-		return p;
-	} else {
-	/* node is somewhere else, start at p_next */
-	temp = (*tp) -> p_next;
-	while(temp != (*tp)) {
-		/* found node ? */
-		if(temp == p){
-			/* unleave node and return it */
-			ret = temp;
-			ret -> p_prev -> p_next = ret -> p_next;
-			ret -> p_next -> p_prev = ret -> p_prev;
-			ret -> p_next = NULL;
-			ret -> p_prev = NULL;
-			return ret;
-		}
-			temp = temp -> p_next;
-		}
-		/* node not in list here */
-		return NULL;
-	}
+    temp->p_next = NULL;
+    temp->p_prev = NULL;
+
+    return temp;
+  }
+  temp = temp->p_next;
+ }
+ return NULL;
 }
 
 /*
