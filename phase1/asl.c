@@ -88,8 +88,8 @@ bool insertBlocked(int* semAdd, pcb_PTR p)
     prnt->s_next = semToAdd;
 
     semToAdd->s_semAdd = semAdd;
-    insertProcQ(&(semToAdd->s_tp), p);
     p->p_semAdd = semAdd;
+    insertProcQ(&(semToAdd->s_tp), p);
     
     return FALSE;
    }
@@ -143,7 +143,7 @@ pcb_PTR outBlocked(pcb_PTR p)
 
    if (child->s_semAdd == p->p_semAdd)
    {
-    //remove p and save a pointer to it
+    //try to remove p and save a pointer to it
     ret = outProcQ(&child->s_tp, p);
 
     //Was p not there?
@@ -218,7 +218,7 @@ void freeSemd(semd_t* s)
 }
 
 /*
-Pull a node off of the free list, null its values and return it.
+Pull a node off of the free list, null its values, and return it.
 */
 semd_t* allocSemd()
 {

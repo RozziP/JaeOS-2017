@@ -217,6 +217,7 @@ pcb_PTR headProcQ(pcb_PTR tp)
 }
 
 /*==========================================CHILD TREE FUNCTIONS================================================*\
+                    These functions access and modify the pcb elements of the child tree
 \*==============================================================================================================*/
 
 /* 
@@ -249,6 +250,7 @@ void insertChild(pcb_PTR prnt, pcb_PTR p)
 
 /*
 Recursively removes all descendants of the given parent node p
+*****NOT CURRENTLY USED, MAYBE NEVER USED****
 */
 void killAllChildren(pcb_PTR p)
 {
