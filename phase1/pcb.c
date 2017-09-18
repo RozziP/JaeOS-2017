@@ -5,7 +5,7 @@
   The queues are doubly linked, circular list.
   The child trees are singly linked linear lists.
 
-  Any process control block that is not in use is stored on the free list.
+  Any process control block that is not in use is stored on the free lists with tail pointers.
   Any process control block with that is in use is stored on the active list.
   
   Authors: Peter Rozzi and Patrick Gemperline
@@ -23,6 +23,8 @@ Initializes our 20(MAXPROC) PCBs
 */
 void initPcbs()
 {
+  pcbFreeList_h = mkEmptyProcQ();
+
   static pcb_t pcbTable[MAXPROC];
   
   for(int i=0; i<MAXPROC; i++)
@@ -86,7 +88,7 @@ pcb_PTR mkEmptyProcQ()
 Return TRUE if the queue whose tail is pointed to by tp is empty.
 Return FALSE otherwise. 
 */
-bool emptyProcQ(pcb_PTR tp)
+BOOL emptyProcQ(pcb_PTR tp)
 {
   return (tp == NULL);
 }
@@ -158,7 +160,7 @@ can point to any element of the process queue.
 pcb_PTR outProcQ(pcb_PTR* tp, pcb_PTR p)
 {
   //Anyone home? No?
- if (emptyProcQ(*tp) || emptyProcQ(p)) return NULL;
+ if (emptyProcQ(*tp) return NULL;
 
  pcb_PTR temp = *tp;
 
@@ -224,7 +226,7 @@ pcb_PTR headProcQ(pcb_PTR tp)
 Return TRUE if the ProcBlk pointed to by p has no children. Return
 FALSE otherwise.
  */
-bool emptyChild(pcb_PTR p)
+BOOL emptyChild(pcb_PTR p)
 {
   return (p->p_child == NULL);
 }
@@ -254,7 +256,7 @@ Recursively removes all descendants of the given parent node p
 */
 void killAllChildren(pcb_PTR p)
 {
-  if (p->p_child == NULL) return;
+  if (emptyChild(p)) return;
 
   while (!(emptyChild(p->p_child)))
   {
@@ -274,7 +276,7 @@ child of p. Return NULL if initially there were no children of p.
 Otherwise, return a pointer to this removed first child ProcBlk. */
 pcb_PTR removeChild(pcb_PTR p)
 {
-  if (p->p_child == NULL) return NULL;
+  if (emptyChild(p) return NULL;
 
   pcb_PTR temp   = p->p_child;
   p->p_child     = temp->p_nextSib;

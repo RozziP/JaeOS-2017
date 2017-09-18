@@ -1,7 +1,7 @@
 /*=======================================================================================*\
   asl.c
   Manages the active and free semaphore lists, which are
-  both singly linked, linear lists.
+  both singly linked, linear lists and in sorted order.
   The active semaphore list contains two dummy nodes for ease of removal and insertion.
 
   Any semaphore descriptor that is not in use is stored on the free list.
@@ -30,6 +30,9 @@ tion.
  */
  void initASL()
  {
+    semdActiveList_h = NULL;
+    semdFreeList_h   = NULL;
+
     static semd_t semdTable[MAXPROC+2];
 
     for(int i=0; i<MAXPROC; i++)
@@ -40,11 +43,11 @@ tion.
     //Set up the dummy nodes with values 0 and MAX_INT
     semdTable[MAXPROC].s_semAdd = 0;
     semdTable[MAXPROC].s_next	= &semdTable[MAXPROC+1];
-    semdTable[MAXPROC].s_tp	= NULL;
+    semdTable[MAXPROC].s_tp	= mkEmptyProcQ();
 
     semdTable[MAXPROC+1].s_semAdd = (int*)MAX_INT;
     semdTable[MAXPROC+1].s_next	= NULL;
-    semdTable[MAXPROC+1].s_tp	= NULL;
+    semdTable[MAXPROC+1].s_tp	= mkEmptyProcQ();
 
     //place our dummy nodes into the active list
     semdActiveList_h = &semdTable[MAXPROC+1];
@@ -65,7 +68,7 @@ to semAdd, and s procq to mkEmptyProcQ()), and proceed as
 above. If a new semaphore descriptor needs to be allocated and the
 semdFree list is empty, return TRUE. In all other cases return FALSE.
 */
-bool insertBlocked(int* semAdd, pcb_PTR p)
+BOOL insertBlocked(int* semAdd, pcb_PTR p)
 {
    semd_t* prnt = find(semAdd);
    semd_t* child = prnt->s_next;
@@ -167,7 +170,7 @@ cess queue associated with the semaphore semAdd. Return NULL
 if semAdd is not found on the ASL or if the process queue associ-
 ated with semAdd is empty.
  */
-pcb_PTR headBlocked(int *semAdd)
+pcb_PTR headBlocked(int* semAdd)
 {
     //Search the list for a semd holding the given semAdd
     semd_t* temp = find(semAdd);
@@ -209,7 +212,7 @@ semd_t* find(int* semAdd)
 \*==============================================================================================================*/
 
 /*
-Put a node on the free list
+Push a node on the free list stack
 */
 void freeSemd(semd_t* s)
 {  
@@ -218,7 +221,7 @@ void freeSemd(semd_t* s)
 }
 
 /*
-Pull a node off of the free list, null its values, and return it.
+Pop a node off of the free list, null its values, and return it.
 */
 semd_t* allocSemd()
 {
@@ -230,7 +233,7 @@ semd_t* allocSemd()
 
     temp->s_next   = NULL;
     temp->s_semAdd = NULL;
-    temp->s_tp     = NULL;
+    temp->s_tp     = mkEmptyProcQ();
 
     return temp;
 }
