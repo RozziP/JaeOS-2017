@@ -37,6 +37,6 @@ typedef struct semd_t
     int*    s_semAdd;
     pcb_PTR s_tp;
 }
-semd_t;
+semd_t, *semd_PTR;
 
 #endif

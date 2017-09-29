@@ -15,11 +15,11 @@
 #include "../h/types.h"
 #include "../e/pcb.e"
 
-HIDDEN semd_t* semdActiveList_h, *semdFreeList_h;
+HIDDEN semd_PTR semdActiveList_h, semdFreeList_h;
 
-HIDDEN semd_t* find(int* semAdd);
-HIDDEN semd_t* allocSemd();
-HIDDEN void freeSemd(semd_t* s);
+HIDDEN semd_PTR find(int* semAdd);
+HIDDEN semd_PTR allocSemd();
+HIDDEN void freeSemd(semd_PTR s);
 
 
 /* 
@@ -70,8 +70,8 @@ semdFree list is empty, return TRUE. In all other cases return FALSE.
 */
 BOOL insertBlocked(int* semAdd, pcb_PTR p)
 {
-   semd_t* prnt = find(semAdd);
-   semd_t* child = prnt->s_next;
+   semd_PTR prnt = find(semAdd);
+   semd_PTR child = prnt->s_next;
 
    if (child->s_semAdd == semAdd)
    {
@@ -83,7 +83,7 @@ BOOL insertBlocked(int* semAdd, pcb_PTR p)
    //Allocate a new semaphore
    else
    {
-    semd_t* semToAdd = allocSemd();
+    semd_PTR semToAdd = allocSemd();
     if (semToAdd == NULL) return TRUE;
 
     //Insert the new semd into the ASL at the appopriate location
@@ -109,8 +109,8 @@ descriptor from the ASL and return it to the semdFree list.
 pcb_PTR removeBlocked(int* semAdd)
 {
     pcb_PTR ret;
-    semd_t* prnt = find(semAdd);
-    semd_t* child = prnt->s_next;
+    semd_PTR prnt = find(semAdd);
+    semd_PTR child = prnt->s_next;
 
     if (child->s_semAdd == semAdd)
     {
@@ -141,8 +141,8 @@ pcb_PTR outBlocked(pcb_PTR p)
 {
 
    pcb_PTR ret;
-   semd_t* prnt  = find(p->p_semAdd);
-   semd_t* child = prnt->s_next;
+   semd_PTR prnt  = find(p->p_semAdd);
+   semd_PTR child = prnt->s_next;
 
    if (child->s_semAdd == p->p_semAdd)
    {
@@ -173,7 +173,7 @@ ated with semAdd is empty.
 pcb_PTR headBlocked(int* semAdd)
 {
     //Search the list for a semd holding the given semAdd
-    semd_t* temp = find(semAdd);
+    semd_PTR temp = find(semAdd);
 
     //Return the head of the pcb at that semAdd
     if (temp->s_next->s_semAdd == semAdd)
@@ -195,9 +195,9 @@ Searches the active semaphore list for a semaphore descriptor containing the giv
 If the semAdd is found, return the node above it
 If the semAdd does not exist, return the node above where it would be.
 */
-semd_t* find(int* semAdd)
+semd_PTR find(int* semAdd)
 {
-    semd_t* temp = semdActiveList_h;
+    semd_PTR temp = semdActiveList_h;
    //while the next value is less than or equal the target value, go to next node
    while(temp->s_next->s_semAdd < semAdd)
    {
@@ -214,7 +214,7 @@ semd_t* find(int* semAdd)
 /*
 Push a node on the free list stack
 */
-void freeSemd(semd_t* s)
+void freeSemd(semd_PTR s)
 {  
     s->s_next = semdFreeList_h;
     semdFreeList_h = s;
@@ -223,9 +223,9 @@ void freeSemd(semd_t* s)
 /*
 Pop a node off of the free list, null its values, and return it.
 */
-semd_t* allocSemd()
+semd_PTR allocSemd()
 {
-    semd_t* temp = semdFreeList_h;
+    semd_PTR temp = semdFreeList_h;
 
     if (temp == NULL) return NULL;
 

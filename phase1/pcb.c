@@ -160,7 +160,7 @@ can point to any element of the process queue.
 pcb_PTR outProcQ(pcb_PTR* tp, pcb_PTR p)
 {
   //Anyone home? No?
- if (emptyProcQ(*tp) return NULL;
+ if (emptyProcQ(*tp)) return NULL;
 
  pcb_PTR temp = *tp;
 
@@ -276,7 +276,7 @@ child of p. Return NULL if initially there were no children of p.
 Otherwise, return a pointer to this removed first child ProcBlk. */
 pcb_PTR removeChild(pcb_PTR p)
 {
-  if (emptyChild(p) return NULL;
+  if (emptyChild(p)) return NULL;
 
   pcb_PTR temp   = p->p_child;
   p->p_child     = temp->p_nextSib;
