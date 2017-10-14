@@ -76,12 +76,8 @@ BOOL insertBlocked(int* semAdd, pcb_PTR p)
    if (child->s_semAdd == semAdd)
    {
    insertProcQ(&child->s_tp, p);
-   p->p_semAdd = semAdd;
-
-   return FALSE;
    }
-   //Allocate a new semaphore
-   else
+   else //Allocate a new semaphore
    {
     semd_PTR semToAdd = allocSemd();
     if (semToAdd == NULL) return TRUE;
@@ -89,13 +85,12 @@ BOOL insertBlocked(int* semAdd, pcb_PTR p)
     //Insert the new semd into the ASL at the appopriate location
     semToAdd->s_next = child;
     prnt->s_next = semToAdd;
-
     semToAdd->s_semAdd = semAdd;
-    p->p_semAdd = semAdd;
     insertProcQ(&(semToAdd->s_tp), p);
-    
-    return FALSE;
    }
+   
+   p->p_semAdd = semAdd;
+   return FALSE;
 }
 
 /* 
