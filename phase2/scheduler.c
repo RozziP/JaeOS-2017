@@ -1,26 +1,51 @@
-/*
-scheduler.c
+/*==========================================================================*\
+  scheduler.c
+  Contains only the scheduler, a function that facilitates the flow of
+  process execution.
 
-*/
+  The scheduler ensures that there is always a process that is either running,
+  or waiting on I/O
+  
+  Authors: Peter Rozzi and Patrick Gemperline
+  Date: 10-24-17
+\*==========================================================================*/
+#include "../e/asl.e"
+#include "../e/pcb.e"
+#include "../h/const.h"
+#include "../h/types.h"
 
-/*
 scheduler()
 {   
-    check if things are in the readyQueue
+    //If there was a process running, do something with its time slice
+    //we havent decided what time stuff to do yet
 
-    if there isn't anything and procCount == 0
-        halt
-    if there isn't anything and procCount == 0 and softBlockedCnt ==0
-        panic
-    if there isn't anything and procCount > 0 and softBlockedCnt > 0
-        enable interrupts
-        wait
+    if(emptyProcQ(readyQueue))
+    {
+        if(procCount == 0)
+        {
+            HALT();
+        }
+
+        if(procCount > 0 && softBlockCnt == 0)
+        {
+            PANIC();
+        }
+
+        if(procCount > 0 && softBlockCnt > 0)
+        {
+            currentProc->p_s->cpsr = currentProc->p_s->cpsr | INTS_ON //Turn interrupts on - this might not work
+            WAIT();
+        }
+
+    }
+    else //there are ready processes
+    {
+        currentProc = removeProcQ(&readyQueue);
+        //get the current time of day and do something with it
+        setTimer(QUANTUM);
+        LDST(&currentProc->p_s);
+    }
     
-    if there are things in the readyQueue
-        currentProc = removeProcQ(&readyQueue)
-        record the current time of day
-        set currentProc's quantum timer
-        LDST(&currentProc->p_s)
+        
 }
 
-*/
