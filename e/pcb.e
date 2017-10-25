@@ -1,7 +1,7 @@
 #ifndef PCB
 #define PCB
 
-/************************* PROCQ.E *****************************
+/************************** PCB.E ******************************
 *
 *  The externals declaration file for the Process Control Block
 *    Module.

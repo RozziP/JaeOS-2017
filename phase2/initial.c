@@ -11,17 +11,18 @@
 \*==========================================================================*/
 #include "../e/asl.e"
 #include "../e/pcb.e"
+#include "../e/globals.e"
 #include "../h/const.h"
 #include "../h/types.h"
 
 void initArea(state_t* newArea);
 
 //Globals
-int procCount;
-int softBlockCnt;
-int sema4[DEVICES];
-pcb_PTR currentProc;
-pcb_PTR readyQueue;
+// int procCount;
+// int softBlockCnt;
+// int sema4[DEVICES];
+// pcb_PTR currentProc;
+// pcb_PTR readyQueue;
 
 
 main()
@@ -36,10 +37,10 @@ main()
     readyQueue   = mkEmptyProcQueue();
 
     //Create the new areas
-    state_t* newTLB      = TLBNEW;
-    state_t* newPgrmTrap = PRGRMNEW;
-    state_t* newSys      = SYSNEW;
-    state_t* newInt      = INTNEW;
+    state_t* newTLB      = TLB_NEW;
+    state_t* newPgrmTrap = PRGRM_NEW;
+    state_t* newSys      = SYS_NEW;
+    state_t* newInt      = INT_NEW;
     //Set their PCs to their respective handlers
     newTLB->pc        = (unsigned int)TLBHandler();
     newPgrmTrap->pc   = (unsigned int)PrgrmTrapHandler();
@@ -58,12 +59,12 @@ main()
     }
 
     //Initialize the starting process
-    pcb_PTR p = allocPcb();
-    p->p_s->sp   = (RAMTOP - FRAMESIZE) 
-    p->p_s->pc   = (unsigned int)test(); //start by running test() in p2test.c
-    p->p_s->cpsr = INTSOFF | SYSMODE     //Interrupts off, kernel mode
-    p->p_s->CP15_Control = ALLOFF;       //VM off
-    insertProcQ(&readyQueue, p);
+    pcb_PTR starter = allocPcb();
+    starter->p_s->sp   = (RAMTOP - FRAMESIZE); 
+    starter->p_s->pc   = (unsigned int)test();   //start by running test() in p2test.c
+    starter->p_s->cpsr = INTS_OFF | SYSMODE;     //Interrupts off, kernel mode
+    starter->p_s->CP15_Control = ALLOFF;         //VM off
+    insertProcQ(&readyQueue, starter);
 
     //timer = 5000, or some equivalent
     setTimer(QUANTUM);
@@ -79,6 +80,6 @@ This function just saves eight lines of code in main()
 void initArea(state_t* newArea)
 {
     newArea->sp   = RAMTOP;
-    newArea->cpsr = INTSOFF | SYSMODE   //Interrupts off, kernel mode
+    newArea->cpsr = INTS_OFF | SYSMODE;   //Interrupts off, kernel mode
     newArea->CP15_Control = ALLOFF;     //VM off
 }

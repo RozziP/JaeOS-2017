@@ -11,6 +11,7 @@
 \*==========================================================================*/
 #include "../e/asl.e"
 #include "../e/pcb.e"
+#include "../e/globals.e"
 #include "../h/const.h"
 #include "../h/types.h"
 
@@ -33,7 +34,7 @@ scheduler()
 
         if(procCount > 0 && softBlockCnt > 0)
         {
-            currentProc->p_s->cpsr = currentProc->p_s->cpsr | INTS_ON //Turn interrupts on - this might not work
+            currentProc->p_s->cpsr = currentProc->p_s->cpsr | INTS_ON; //Turn interrupts on - this might not work
             WAIT();
         }
 
