@@ -30,6 +30,7 @@ HIDDEN void sys5(state_PTR callingProc);
 HIDDEN void sys6(state_PTR callingProc);
 HIDDEN void sys7(state_PTR callingProc);
 HIDDEN void sys8(state_PTR callingProc);
+HIDDEN void KILLALLTHECHILDREN(state_PTR callingProc)
 HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
 HIDDEN void copyState(state_PTR source, state_PTR destination);
 HIDDEN void programTrapHandler();
@@ -123,7 +124,26 @@ HIDDEN void sys1(state_PTR callingProc){
 }
 
 
-HIDDEN void sys2();
+
+
+HIDDEN void sys2(){
+    if(emptyChild(currentProc)){
+        //has no children
+        outChild(currrentProc);
+        freePcb(currentProc);
+        --procCount;
+    }
+    else{
+        //has children.... Must Kill them all
+        KILLAllTHECHILDREN(currentProc);
+    }
+
+    currentProc=NULL;
+
+    scheduler();
+}
+
+
 HIDDEN void sys3(state_PTR callingProc);
 HIDDEN void sys4(state_PTR callingProc);
 HIDDEN void sys5(state_PTR callingProc);
