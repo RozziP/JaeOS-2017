@@ -3,6 +3,104 @@ exceptions.c
 
 */
 
+#include "../e/asl.e"
+#include "../e/pcb.e"
+#include "../e/globals.e"
+#include "../h/const.h"
+#include "../h/types.h"
+#include "/usr/include/uarm/uARMtypes.h"
+
+
+
+/*Globals*/
+
+extern int softBlockCnt;
+extern int procCount;
+extern pcb_PTR currentProc;
+extern pcb_PTR readyQueue;
+extern int sem4[DEVICES];
+
+
+
+HIDDEN void sys1(state_t callingProc);
+HIDDEN void sys2();
+HIDDEN void sys3(state_t callingProc);
+HIDDEN void sys4(state_t callingProc);
+HIDDEN void sys5(state_t callingProc);
+HIDDEN void sys6(state_t callingProc);
+HIDDEN void sys7(state_t callingProc);
+HIDDEN void sys8(state_t callingProc);
+HIDDEN void passUpOrDie(state_t callingProc,int cause);
+HIDDEN void copyState(state_t source, state_t destination);
+HIDDEN void programTrapHandler();
+HIDDEN void tlbManager();
+
+void sysHandler(){
+    state_t callingProc;
+    state_t program;
+    int requestedSysCall;
+    unsigned int callingProcStatus;
+    unsigned int temp;
+    
+    callingProc = (state_t) SYS_OLD;
+    requestedSysCall=callingProc -> //Which Register?
+    callingProcStatus= callingProc -> //status register?
+
+    if(requestedSysCall>0 && requestedSysCall<9 /* && 
+        not in kernel mode*/){
+        program= (state_t) PRGRM_OLD;
+
+        copyState(callingProc, program);
+
+        //cause= privileged instruction
+        temp=program->CP15_CAUSE &
+        program-> CP15_Cause= 
+
+        programTrapHandler();
+
+    }
+
+    callingProc->pc=callingProc->pc+4;
+
+
+    //Direct to syscall
+    switch(requestedSysCall){
+        case NEWCHILDPROC:
+            sys1(caller);
+        break;
+        case KILLPROC:
+            sys2();
+        break;
+        case SIGNAL:
+            sys3(caller);
+        break;
+        case WAIT:
+            sys4(caller);
+        break;
+        case UNSURE:
+            sys5(caller);
+        break;
+        case CPUTIME:
+            sys6(caller);
+        break;
+        case CLOCKWAIT:
+            sys7(caller);
+        break;
+        case IOWAIT:
+            sys8(caller);
+        break;
+        default: //everything else
+            PassUpOrDie(caller, SYSTRAPHAND);
+        break;
+    }
+
+    //Critical Failure
+    PANIC();
+    
+}
+
+
+
 /*
 
 tlb()

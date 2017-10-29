@@ -46,4 +46,26 @@
 #define SYS_OLD          0x00007210
 #define SYS_NEW          0x00007268
 
+
+//sysCall values
+
+#define NEWCHILDPROC 	 1
+#define KILLPROC         2
+#define SIGNAL   		 3
+#define WAIT 		     4
+#define UNSURE       	 5 //GIVE THIS A BETTER NAME
+#define CPUTIME 		 6
+#define CLOCKWAIT 		 7
+#define IOWAIT 			 8
+
+
+
+#define TLBTRAPHAND     0
+#define PROGTRAPHAND    1
+#define SYSTRAPHAND		2
+
+
+
+
+
 #endif
