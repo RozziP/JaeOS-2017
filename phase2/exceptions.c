@@ -179,13 +179,40 @@ HIDDEN void sys4(state_PTR callingProc){
     }
     //nothing conrols sem
     LDST(callingProc); 
-    
+
 }
 
 
 
-HIDDEN void sys5(state_PTR callingProc);
-HIDDEN void sys6(state_PTR callingProc);
+HIDDEN void sys5(state_PTR callingProc){
+    switch(caller-> /*register*/){
+        case TLBTRAPHAND:
+            if(currentProc->TLB_NEW != NULL){
+                sys2(); //already called this once
+            }
+            currentProc -> TLB_NEW=(state_PTR) callingProc -> /*register*/;
+            currentProc -> TLB_OLD=(state_PTR) callingProc -> /*register*/;
+            break;
+        case PROGTRAPHAND: 
+            if(currentProc-> PRGRM_OLD != NULL){
+                sys2(); //already called this once
+            }
+            currentProc -> PRGRM_NEW=(state_PTR) callingProc -> /*register*/;
+            currentProc -> PRGRM_OLD=(state_PTR) callingProc -> /*register*/;
+            break;
+        case SYSTRAPHAND: 
+            if(currentProc-> SYS_OLD != NULL){
+                sys2(); //already called this once
+            }
+            currentProc -> SYS_NEW=(state_PTR) callingProc -> /*register*/;
+            currentProc -> SYS_OLD=(state_PTR) callingProc -> /*register*/;
+            break;
+    }
+    LDST(callingProc);
+}
+
+
+HIDDEN void sys6(state_PTR callingProc)
 HIDDEN void sys7(state_PTR callingProc);
 HIDDEN void sys8(state_PTR callingProc);
 
