@@ -99,7 +99,41 @@ void sysHandler(){
 
 }
 
+HIDDEN void sys1(state_PTR callingProc){
+    pcb_PTR temp= allocPcb();
+    
+    if(temp==NULL){
+        //no free pcbs
+        callingProc-> /*which register*/ =FAILURE;
+        LDST(callingProc);
+    }
+    ++procCount
 
+    //Make new process a progeny of the callingProcess
+    insertChild(currentProc, temp)
+
+    //put it on the ready queue
+    insertProcQ(&readyQueue, temp);
+
+    copyState(callingProc->/*register*/, &temp -> /*register*/)
+
+    callingProc -> /*register*/ = SUCCESS;
+
+    LDST(callingProc);
+}
+
+
+HIDDEN void sys2();
+HIDDEN void sys3(state_PTR callingProc);
+HIDDEN void sys4(state_PTR callingProc);
+HIDDEN void sys5(state_PTR callingProc);
+HIDDEN void sys6(state_PTR callingProc);
+HIDDEN void sys7(state_PTR callingProc);
+HIDDEN void sys8(state_PTR callingProc);
+HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
+HIDDEN void copyState(state_PTR source, state_PTR destination);
+HIDDEN void programTrapHandler();
+HIDDEN void tlbManager();
 
 
 

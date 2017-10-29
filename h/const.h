@@ -13,6 +13,9 @@
 #define MAXPROC  		 20
 #define BOOL             int //Got this idea from Neal
 #define MAX_INT          0xFFFFFFFF
+#define FAILURE			-1
+#define SUCCESS			0
+
 
 /*Number of device semaphores
 8 for disk lines
