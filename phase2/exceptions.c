@@ -22,33 +22,33 @@ extern int sem4[DEVICES];
 
 
 
-HIDDEN void sys1(state_t callingProc);
+HIDDEN void sys1(state_PTR callingProc);
 HIDDEN void sys2();
-HIDDEN void sys3(state_t callingProc);
-HIDDEN void sys4(state_t callingProc);
-HIDDEN void sys5(state_t callingProc);
-HIDDEN void sys6(state_t callingProc);
-HIDDEN void sys7(state_t callingProc);
-HIDDEN void sys8(state_t callingProc);
-HIDDEN void passUpOrDie(state_t callingProc,int cause);
-HIDDEN void copyState(state_t source, state_t destination);
+HIDDEN void sys3(state_PTR callingProc);
+HIDDEN void sys4(state_PTR callingProc);
+HIDDEN void sys5(state_PTR callingProc);
+HIDDEN void sys6(state_PTR callingProc);
+HIDDEN void sys7(state_PTR callingProc);
+HIDDEN void sys8(state_PTR callingProc);
+HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
+HIDDEN void copyState(state_PTR source, state_PTR destination);
 HIDDEN void programTrapHandler();
 HIDDEN void tlbManager();
 
 void sysHandler(){
-    state_t callingProc;
-    state_t program;
+    state_PTR callingProc;
+    state_PTR program;
     int requestedSysCall;
     unsigned int callingProcStatus;
     unsigned int temp;
     
-    callingProc = (state_t) SYS_OLD;
+    callingProc = (state_PTR) SYS_OLD;
     requestedSysCall=callingProc -> //Which Register?
     callingProcStatus= callingProc -> //status register?
 
     if(requestedSysCall>0 && requestedSysCall<9 /* && 
         not in kernel mode*/){
-        program= (state_t) PRGRM_OLD;
+        program= (state_PTR) PRGRM_OLD;
 
         copyState(callingProc, program);
 
@@ -96,8 +96,10 @@ void sysHandler(){
 
     //Critical Failure
     PANIC();
-    
+
 }
+
+
 
 
 
