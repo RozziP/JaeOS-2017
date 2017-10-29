@@ -30,7 +30,7 @@ HIDDEN void sys5(state_PTR callingProc);
 HIDDEN void sys6(state_PTR callingProc);
 HIDDEN void sys7(state_PTR callingProc);
 HIDDEN void sys8(state_PTR callingProc);
-HIDDEN void KILLALLTHECHILDREN(state_PTR callingProc)
+HIDDEN void KILLALLTHECHILDREN(pcb_PTR top)
 HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
 HIDDEN void copyState(state_PTR source, state_PTR destination);
 HIDDEN void programTrapHandler();
@@ -125,7 +125,6 @@ HIDDEN void sys1(state_PTR callingProc){
 
 
 
-
 HIDDEN void sys2(){
     if(emptyChild(currentProc)){
         //has no children
@@ -144,12 +143,40 @@ HIDDEN void sys2(){
 }
 
 
-HIDDEN void sys3(state_PTR callingProc);
+HIDDEN void sys3(state_PTR callingProc){
+    pcb_PTR tempProc=NULL;
+    int* sem=(int*) callingProc -> /*register*/;
+    sem=*sem+1;
+
+    if(*sem <=0){
+        //a proc is waiting on the sem
+        tempProc=removeBlocked(sem);
+        
+        if(tempProc !=NULL){
+            //put on ready queue
+            insertProcQ(&readyQueue, tempProc);
+        }
+        //else nothing waiting
+    }
+
+    //send back to caller
+    LDST(callingProc);
+}
+
+
+
 HIDDEN void sys4(state_PTR callingProc);
 HIDDEN void sys5(state_PTR callingProc);
 HIDDEN void sys6(state_PTR callingProc);
 HIDDEN void sys7(state_PTR callingProc);
 HIDDEN void sys8(state_PTR callingProc);
+
+
+HIDDEN void KILLALLTHECHILDREN(pcb_PTR top){
+   //write later
+}
+
+
 HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
 HIDDEN void copyState(state_PTR source, state_PTR destination);
 HIDDEN void programTrapHandler();
