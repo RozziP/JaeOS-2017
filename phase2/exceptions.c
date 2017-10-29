@@ -30,11 +30,13 @@ HIDDEN void sys5(state_PTR callingProc);
 HIDDEN void sys6(state_PTR callingProc);
 HIDDEN void sys7(state_PTR callingProc);
 HIDDEN void sys8(state_PTR callingProc);
-HIDDEN void KILLALLTHECHILDREN(pcb_PTR top)
+HIDDEN void KILLALLTHECHILDREN(pcb_PTR top);
 HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
 HIDDEN void copyState(state_PTR source, state_PTR destination);
 HIDDEN void programTrapHandler();
 HIDDEN void tlbManager();
+
+
 
 void sysHandler(){
     state_PTR callingProc;
@@ -165,7 +167,23 @@ HIDDEN void sys3(state_PTR callingProc){
 
 
 
-HIDDEN void sys4(state_PTR callingProc);
+HIDDEN void sys4(state_PTR callingProc){
+    int* sem=(int*) callingProc -> /*register*/;
+    sem=*sem-1;
+
+    if(*sem <0){
+        //something controls sem
+        copyState(callingProc, &(currentProc ->p_s));
+        insertBlocked(sem, currentProc);
+        scheduler();
+    }
+    //nothing conrols sem
+    LDST(callingProc); 
+    
+}
+
+
+
 HIDDEN void sys5(state_PTR callingProc);
 HIDDEN void sys6(state_PTR callingProc);
 HIDDEN void sys7(state_PTR callingProc);
