@@ -118,7 +118,7 @@ HIDDEN void sys1(state_PTR callingProc){
     //put it on the ready queue
     insertProcQ(&readyQueue, temp);
 
-    copyState(callingProc->/*register*/, &temp -> /*register*/)
+    copyState(callingProc->/*register*/, &temp -> p_s)
 
     callingProc -> /*register*/ = SUCCESS;
 
@@ -212,9 +212,51 @@ HIDDEN void sys5(state_PTR callingProc){
 }
 
 
-HIDDEN void sys6(state_PTR callingProc)
-HIDDEN void sys7(state_PTR callingProc);
-HIDDEN void sys8(state_PTR callingProc);
+
+HIDDEN void sys6(state_PTR callingProc){
+    //do later b/c time stuff
+}
+
+
+
+HIDDEN void sys7(state_PTR callingProc){
+    //do later b/c time stuff
+}
+
+
+
+HIDDEN void sys8(state_PTR callingProc){
+    int lineNumber, deviceNumber, read, index;
+    int* sem;
+
+    lineNumber= callingProc ->/*register*/;
+    deviceNumber = callingProc ->/*register*/;
+    read = callingProc -> /*register*/;
+
+    if(lineNumber<DISK || lineNumber>UMMM){
+        //Invalid request
+        sys2(); 
+    }
+
+    if(lineNumber == UMMM && read==TRUE){
+        index = /*indexing trouble*/;
+    }
+    else{
+        index= /*indexing trouble*/;
+    }
+    sem=&(sem4[index]);
+    sem=*sem-1;
+    if (*sem<0){
+        insertBlocked(sem, currentProc);
+        copyState(caller, &(currentProc -> p_s));
+        softBlockCount++;
+        scheduler();
+    }
+
+    LDST(callingProc);
+}
+
+
 
 
 HIDDEN void KILLALLTHECHILDREN(pcb_PTR top){

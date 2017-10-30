@@ -68,6 +68,12 @@
 #define SYSTRAPHAND		2
 
 
+#define DISK			3
+#define TAPE    		4
+#define UHH     		5
+#define PRINTER 		6
+#define UMMM			7
+
 
 
 
