@@ -267,11 +267,28 @@ HIDDEN void KILLALLTHECHILDREN(pcb_PTR top){
 HIDDEN void passUpOrDie(state_PTR callingProc,int cause){
     switch(cause){
         case SYSTRAPHAND:  
-            if(currentProc -> SYS_NEW != NULL){
+            if(currentProc -> sysCallNew != NULL){
                 //sys trap called
-                copyState(callingProc, currentProc ->)
+                copyState(callingProc, currentProc ->sysCallOld);
+                LDST(currentPRoc -> sysCallNew);
             }
+        break;
+        case PROGTRAPHAND:  
+            if(currentProc -> programTrapNew != NULL){
+                //sys trap called
+                copyState(callingProc, currentProc ->programTrapOld);
+                LDST(currentPRoc -> programTrapNew);
+            }
+        break;
+        case TLBTRAPHAND:  
+            if(currentProc -> tlbNew != NULL){
+                //sys trap called
+                copyState(callingProc, currentProc ->tlbOld);
+                LDST(currentPRoc -> tlbNew);
+            }
+        break;
     }
+    sys2();
    
 }
 
