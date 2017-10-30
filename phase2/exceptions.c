@@ -10,7 +10,19 @@ exceptions.c
 #include "../h/types.h"
 #include "/usr/include/uarm/uARMtypes.h"
 
-HIDDEN void sys1(state_PTR callingProc);
+
+
+/*Globals*/
+
+extern int softBlockCnt;
+extern int procCount;
+extern pcb_PTR currentProc;
+extern pcb_PTR readyQueue;
+extern int sem4[DEVICES];
+
+
+
+HIDDEN void sys1(state_t* callingProc);
 HIDDEN void sys2();
 HIDDEN void sys3(state_PTR callingProc);
 HIDDEN void sys4(state_PTR callingProc);
@@ -33,13 +45,14 @@ void prgrmTrapHandler()
     passUpOrDie(caller, PRGRMTRAP);
 }
 
-void sysHandler()
-{
-    state_PTR callingProc;
+
+void sysHandler(){
+    state_t* callingProc;
+    state_t* program;
     int requestedSysCall;
     
     callingProc = (state_PTR) SYS_OLD;
-    requestedSysCall = callingProc-> //where to find this info?
+    requestedSysCall = callingProc-> a1;
 
     //Unauthorized access, shut it down
     if(requestedSysCall > 0 && requestedSysCall < 9 && callingProc->p_s->cpsr = USRMODE)
@@ -58,27 +71,27 @@ void sysHandler()
         break;
 
         case SIGNAL:
-            sys3(caller);
+            sys3(callingProc);
         break;
 
         case WAIT:
-            sys4(caller);
+            sys4(callingProc);
         break;
 
-        case UNSURE:
-            sys5(caller);
+        case ESV:
+            sys5(callingProc);
         break;
 
         case CPUTIME:
-            sys6(caller);
+            sys6(callingProc);
         break;
 
         case CLOCKWAIT:
-            sys7(caller);
+            sys7(callingProc);
         break;
 
         case IOWAIT:
-            sys8(caller);
+            sys8(callingProc);
         break;
 
         default: //everything else
@@ -91,12 +104,12 @@ void sysHandler()
 
 }
 
-HIDDEN void sys1(state_PTR callingProc){
-    pcb_PTR temp = allocPcb();
+HIDDEN void sys1(state_t* callingProc){
+    pcb_PTR temp= allocPcb();
     
     if(temp == NULL){
         //no free pcbs
-        callingProc-> /*which register*/ =FAILURE;
+        callingProc -> a1 = FAILURE;
         LDST(callingProc);
     }
     ++procCount
@@ -107,7 +120,7 @@ HIDDEN void sys1(state_PTR callingProc){
     //put it on the ready queue
     insertProcQ(&readyQueue, temp);
 
-    callingProc -> /*register*/ = SUCCESS;
+    callingProc -> a1 = SUCCESS;
 
     LDST(callingProc);
 }
@@ -123,7 +136,7 @@ HIDDEN void sys2(){
     }
     else{
         //has children.... Must Kill them all
-        killAllChildren(currentProc);
+        KILLALLTHECHILDREN(currentProc);
     }
 
     currentProc=NULL;
@@ -131,9 +144,9 @@ HIDDEN void sys2(){
 }
 
 
-HIDDEN void sys3(state_PTR callingProc){
+HIDDEN void sys3(state_t* callingProc){
     pcb_PTR tempProc=NULL;
-    int* sem=(int*) callingProc -> /*register*/;
+    int* sem=(int*) callingProc -> a2;
     sem=*sem+1;
 
     if(*sem <=0){
@@ -153,8 +166,8 @@ HIDDEN void sys3(state_PTR callingProc){
 
 
 
-HIDDEN void sys4(state_PTR callingProc){
-    int* sem = (int*) callingProc -> /*register*/;
+HIDDEN void sys4(state_t* callingProc){
+    int* sem=(int*) callingProc -> a2;
     sem=*sem-1;
 
     if(*sem <0){
@@ -162,7 +175,7 @@ HIDDEN void sys4(state_PTR callingProc){
         insertBlocked(sem, currentProc);
         scheduler();
     }
-    //nothing conrols sem
+    //nothing controls sem
     LDST(callingProc); 
 
 }
@@ -178,8 +191,8 @@ HIDDEN void sys5(state_PTR callingProc)
             {
                 sys2(); //already called this once
             }
-            currentProc->TLB_NEW = (state_PTR)callingProc-> /*register*/;
-            currentProc->TLB_OLD = (state_PTR)callingProc-> /*register*/;
+            currentProc -> sysCallNew=(state_t*) callingProc -> a4;
+            currentProc -> sysCallOld=(state_t*) callingProc -> a3;
             break;
 
         case PROGTRAP: 
@@ -187,8 +200,8 @@ HIDDEN void sys5(state_PTR callingProc)
             {
                 sys2(); //already called this once
             }
-            currentProc->PRGRM_NEW = (state_PTR)callingProc -> /*register*/;
-            currentProc->PRGRM_OLD = (state_PTR)callingProc -> /*register*/;
+            currentProc -> programTrapNew=(state_t*) callingProc -> a4;
+            currentProc -> programTrapOld=(state_t*) callingProc -> a3;
             break;
 
         case SYSTRAP: 
@@ -196,8 +209,8 @@ HIDDEN void sys5(state_PTR callingProc)
             {
                 sys2(); //already called this once
             }
-            currentProc->SYS_NEW = (state_PTR)callingProc-> /*register*/;
-            currentProc->SYS_OLD = (state_PTR)callingProc-> /*register*/;
+            currentProc -> tlbNew=(state_t*) callingProc -> a4;
+            currentProc -> tlbOld=(state_t*) callingProc -> a3;
             break;
     }
     LDST(callingProc);
@@ -205,38 +218,36 @@ HIDDEN void sys5(state_PTR callingProc)
 
 
 
-HIDDEN void sys6(state_PTR callingProc)
-{
+HIDDEN void sys6(state_t* callingProc){
     //do later b/c time stuff
 }
 
 
 
-HIDDEN void sys7(state_PTR callingProc)
-{
+HIDDEN void sys7(state_t* callingProc){
     //do later b/c time stuff
 }
 
 
 
-HIDDEN void sys8(state_PTR callingProc){
+HIDDEN void sys8(state_t* callingProc){
     int lineNumber, deviceNumber, read, index;
     int* sem;
 
-    lineNumber= callingProc ->/*register*/;
-    deviceNumber = callingProc ->/*register*/;
-    read = callingProc -> /*register*/;
+    lineNumber= callingProc -> a2;
+    deviceNumber = callingProc ->a3;
+    read = callingProc -> a4;
 
     if(lineNumber<DISK || lineNumber>UMMM){
         //Invalid request
         sys2(); 
     }
 
-    if(lineNumber == UMMM && read==TRUE){
-        index = /*indexing trouble*/;
+    if(lineNumber == TERMINAL && read==TRUE){
+        index = deviceNumber*8+lineNumber+8;
     }
     else{
-        index= /*indexing trouble*/;
+        index= index = deviceNumber*8+lineNumber;
     }
     sem=&(sem4[index]);
     sem=*sem-1;
@@ -252,123 +263,32 @@ HIDDEN void sys8(state_PTR callingProc){
 
 
 
-HIDDEN void killAllChildren(pcb_PTR top)
+HIDDEN void KILLALLCHILDREN(pcb_PTR top)
 {
    //write later
 }
 
 
-HIDDEN void passUpOrDie(state_PTR callingProc, int cause){
+HIDDEN void passUpOrDie(state_t* callingProc,int cause){
     switch(cause){
         case SYSTRAP:  
             if(currentProc-> SYS_NEW != NULL){
                 //sys trap called
-                LDST(currentPRoc -> SYS_NEW);
+                LDST(currentPRoc -> sysCallNew);
             }
         break;
         case PRGRMTRAP:  
             if(currentProc->PRGRM_NEW != NULL){
                 //sys trap called
-                LDST(currentPRoc -> PRGRM_NEW);
+                LDST(currentPRoc -> programTrapNew);
             }
         break;
         case TLBTRAP:  
             if(currentProc -> TLB_NEW != NULL){
                 //sys trap called
-                LDST(currentPRoc -> TLB_NEW);
+                LDST(currentPRoc -> tlbNew);
             }
         break;
     }
     sys2();
-   
 }
-
-/*
-
-tlb()
-{
-   passUpOrDie()
-}
-
-prgrmTrap()
-{
-   passUpOrDie()
-}
-
-passUpOrDie()
-{
-    if sys5 hasn't been called for the error type, nuke
-    otherwise, load the handler that was set by sys5
-}
-
-sysCallHandler()
-{
-    send the caller to the right syscall
-}
-
-sys1()
-{
-    create a new node
-    add it to readyqueue
-    incremenent processCount
-}
-
-sys2()
-{
-    delete a node
-    if that node has children, call killAllChildren()
-    decrement procCount
-}
-
-killAllChildren(pcb_PTR parent)
-{
-    recursively decimate the given node's bloodline
-    decrement procCount for every child killed
-
-}
-
-sys3(mutex)
-{
-    increment mutex
-    if mutex <= 0
-        unblock a process from mutex
-        put it on the readyQueue
-
-    return control to the caller
-}
-
-wait
-sys4(mutex)
-{
-    decrement mutex
-    if mutex < 0
-        block currentProc on mutex
-        call the scheduler
-
-    otherwise, return control to the caller
-}
-
-sys5()
-{
-    if sys5 has already been called for the given error type, kill the process
-    otherwise, give the current process a new exception handler to be used by passUpOrDie
-}
-
-sys6(pcb)
-{
-    calculate the difference between the start time and the current time
-    add that time the requesting PCB's time 
-}
-
-sys7()
-{
-    time things we dont know
-}
-
-sys8()
-{
-    find the device that sent the request
-    perform a wait operation on the device's semaphore
-    increment softBlockedCnt
-}
-*/

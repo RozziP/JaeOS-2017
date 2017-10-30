@@ -55,7 +55,7 @@
 #define DEATH            2
 #define SIGNAL   		 3
 #define WAIT 		     4
-#define UNSURE       	 5 //GIVE THIS A BETTER NAME
+#define ESV         	 5 //GIVE THIS A BETTER NAME
 #define CPUTIME 		 6
 #define CLOCKWAIT 		 7
 #define IOWAIT 			 8
@@ -69,9 +69,9 @@
 
 #define DISK			3
 #define TAPE    		4
-#define UHH     		5
+#define NETWORK    		5
 #define PRINTER 		6
-#define UMMM			7
+#define TERMINAL		7
 
 
 
