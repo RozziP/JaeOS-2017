@@ -172,55 +172,35 @@ HIDDEN void sys4(state_PTR callingProc){
 
 
 
-<<<<<<< HEAD
 HIDDEN void sys5(state_PTR callingProc)
 {
     switch(caller-> /*register*/)
     {
         case TLBTRAPHAND:
-            if(currentProc->TLB_NEW != NULL){
+            if(currentProc->TLB_NEW != NULL)
+            {
                 sys2(); //already called this once
             }
             currentProc->TLB_NEW = (state_PTR)callingProc-> /*register*/;
             currentProc->TLB_OLD = (state_PTR)callingProc-> /*register*/;
-=======
-HIDDEN void sys5(state_PTR callingProc){
-    switch(caller -> /*register*/){
-        case SYSTRAPHAND: 
-            if(currentProc -> sysCallNew != NULL){
-                sys2(); //already called this once
-            }
-            currentProc -> sysCallNew=(state_PTR) callingProc -> /*register*/;
-            currentProc -> sysCallOld=(state_PTR) callingProc -> /*register*/;
->>>>>>> 2e72a2c11e9dd7ecf032f077dae45fc4049ea96a
             break;
 
         case PROGTRAPHAND: 
-            if(currentProc -> programTrapNew != NULL){
+            if(currentProc -> programTrapNew != NULL)
+            {
                 sys2(); //already called this once
             }
-<<<<<<< HEAD
             currentProc->PRGRM_NEW = (state_PTR)callingProc -> /*register*/;
             currentProc->PRGRM_OLD = (state_PTR)callingProc -> /*register*/;
             break;
 
         case SYSTRAPHAND: 
-            if(currentProc-> SYS_OLD != NULL){
+            if(currentProc-> SYS_OLD != NULL)
+            {
                 sys2(); //already called this once
             }
             currentProc->SYS_NEW = (state_PTR)callingProc-> /*register*/;
             currentProc->SYS_OLD = (state_PTR)callingProc-> /*register*/;
-=======
-            currentProc -> programTrapNew=(state_PTR) callingProc -> /*register*/;
-            currentProc -> programTrapOld=(state_PTR) callingProc -> /*register*/;
-            break;
-        case TLBTRAPHAND:
-            if(currentProc -> tlbNew != NULL){
-                sys2(); //already called this once
-            }
-            currentProc -> tlbNew=(state_PTR) callingProc -> /*register*/;
-            currentProc -> tlbNew=(state_PTR) callingProc -> /*register*/;
->>>>>>> 2e72a2c11e9dd7ecf032f077dae45fc4049ea96a
             break;
     }
     LDST(callingProc);
@@ -274,17 +254,12 @@ HIDDEN void sys8(state_PTR callingProc){
 
 
 
-HIDDEN void killAllChildren(pcb_PTR top){
+HIDDEN void killAllChildren(pcb_PTR top)
+{
    //write later
 }
 
 
-<<<<<<< HEAD
-HIDDEN void passUpOrDie(state_PTR callingProc,int cause)
-{
-    src->cp
-}
-=======
 HIDDEN void passUpOrDie(state_PTR callingProc,int cause){
     switch(cause){
         case SYSTRAPHAND:  
@@ -312,15 +287,6 @@ HIDDEN void passUpOrDie(state_PTR callingProc,int cause){
     sys2();
    
 }
-
-
-
->>>>>>> 2e72a2c11e9dd7ecf032f077dae45fc4049ea96a
-HIDDEN void copyState(state_PTR source, state_PTR destination);
-HIDDEN void programTrapHandler();
-HIDDEN void tlbManager();
-
-
 
 /*
 
