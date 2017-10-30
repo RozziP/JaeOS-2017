@@ -28,6 +28,14 @@ typedef struct pcb_t
     int*	p_semAdd;   //ptr to semaphore on
 
     /* which proc is blocked */
+
+    state_PTR sysCallNew;
+    state_PTR sysCallOld;
+    state_PTR programTrapNew;
+    state_PTR programTrapOld;
+    state_PTR tlbNew;
+    state_PTR tlbOld;
+    
 }
 pcb_t, *pcb_PTR;
 

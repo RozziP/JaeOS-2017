@@ -185,27 +185,27 @@ HIDDEN void sys4(state_PTR callingProc){
 
 
 HIDDEN void sys5(state_PTR callingProc){
-    switch(caller-> /*register*/){
-        case TLBTRAPHAND:
-            if(currentProc->TLB_NEW != NULL){
+    switch(caller -> /*register*/){
+        case SYSTRAPHAND: 
+            if(currentProc -> sysCallNew != NULL){
                 sys2(); //already called this once
             }
-            currentProc -> TLB_NEW=(state_PTR) callingProc -> /*register*/;
-            currentProc -> TLB_OLD=(state_PTR) callingProc -> /*register*/;
+            currentProc -> sysCallNew=(state_PTR) callingProc -> /*register*/;
+            currentProc -> sysCallOld=(state_PTR) callingProc -> /*register*/;
             break;
         case PROGTRAPHAND: 
-            if(currentProc-> PRGRM_OLD != NULL){
+            if(currentProc -> programTrapNew != NULL){
                 sys2(); //already called this once
             }
-            currentProc -> PRGRM_NEW=(state_PTR) callingProc -> /*register*/;
-            currentProc -> PRGRM_OLD=(state_PTR) callingProc -> /*register*/;
+            currentProc -> programTrapNew=(state_PTR) callingProc -> /*register*/;
+            currentProc -> programTrapOld=(state_PTR) callingProc -> /*register*/;
             break;
-        case SYSTRAPHAND: 
-            if(currentProc-> SYS_OLD != NULL){
+        case TLBTRAPHAND:
+            if(currentProc -> tlbNew != NULL){
                 sys2(); //already called this once
             }
-            currentProc -> SYS_NEW=(state_PTR) callingProc -> /*register*/;
-            currentProc -> SYS_OLD=(state_PTR) callingProc -> /*register*/;
+            currentProc -> tlbNew=(state_PTR) callingProc -> /*register*/;
+            currentProc -> tlbNew=(state_PTR) callingProc -> /*register*/;
             break;
     }
     LDST(callingProc);
@@ -264,7 +264,19 @@ HIDDEN void KILLALLTHECHILDREN(pcb_PTR top){
 }
 
 
-HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
+HIDDEN void passUpOrDie(state_PTR callingProc,int cause){
+    switch(cause){
+        case SYSTRAPHAND:  
+            if(currentProc -> SYS_NEW != NULL){
+                //sys trap called
+                copyState(callingProc, currentProc ->)
+            }
+    }
+   
+}
+
+
+
 HIDDEN void copyState(state_PTR source, state_PTR destination);
 HIDDEN void programTrapHandler();
 HIDDEN void tlbManager();
