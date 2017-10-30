@@ -5,22 +5,10 @@ exceptions.c
 
 #include "../e/asl.e"
 #include "../e/pcb.e"
-#include "../e/globals.e"
+#include "../e/globals.h"
 #include "../h/const.h"
 #include "../h/types.h"
 #include "/usr/include/uarm/uARMtypes.h"
-
-
-
-/*Globals*/
-
-extern int softBlockCnt;
-extern int procCount;
-extern pcb_PTR currentProc;
-extern pcb_PTR readyQueue;
-extern int sem4[DEVICES];
-
-
 
 HIDDEN void sys1(state_PTR callingProc);
 HIDDEN void sys2();
@@ -30,68 +18,69 @@ HIDDEN void sys5(state_PTR callingProc);
 HIDDEN void sys6(state_PTR callingProc);
 HIDDEN void sys7(state_PTR callingProc);
 HIDDEN void sys8(state_PTR callingProc);
-HIDDEN void KILLALLTHECHILDREN(pcb_PTR top);
+HIDDEN void killAllChildren(pcb_PTR top);
 HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
 HIDDEN void copyState(state_PTR source, state_PTR destination);
-HIDDEN void programTrapHandler();
-HIDDEN void tlbManager();
 
+void tlbHandler()
+{
+    state_PTR caller = TLB_OLD;
+    passUpOrDie(caller, TLB);
+}
 
+void prgrmTrapHandler()
+{
+    state_PTR caller = PRGRM_OLD;
+    passUpOrDie(caller, PRGRMTRAP);
+}
 
-void sysHandler(){
+void sysHandler()
+{
     state_PTR callingProc;
-    state_PTR program;
     int requestedSysCall;
-    unsigned int callingProcStatus;
-    unsigned int temp;
     
     callingProc = (state_PTR) SYS_OLD;
-    requestedSysCall=callingProc -> //Which Register?
-    callingProcStatus= callingProc -> //status register?
+    requestedSysCall = callingProc-> //where to find this info?
 
-    if(requestedSysCall>0 && requestedSysCall<9 /* && 
-        not in kernel mode*/){
-        program= (state_PTR) PRGRM_OLD;
-
-        copyState(callingProc, program);
-
-        //cause= privileged instruction
-        temp=program->CP15_CAUSE &
-        program-> CP15_Cause= 
-
+    if(requestedSysCall > 0 && requestedSysCall < 9 && callingProc->p_s->cpsr = USRMODE)
+    {
         programTrapHandler();
-
     }
-
-    callingProc->pc=callingProc->pc+4;
-
 
     //Direct to syscall
     switch(requestedSysCall){
-        case NEWCHILDPROC:
+        case BIRTH:
             sys1(caller);
         break;
-        case KILLPROC:
+
+        case DEATH:
             sys2();
         break;
+
         case SIGNAL:
             sys3(caller);
         break;
+
         case WAIT:
             sys4(caller);
         break;
+
         case UNSURE:
             sys5(caller);
         break;
+
         case CPUTIME:
             sys6(caller);
         break;
+
         case CLOCKWAIT:
             sys7(caller);
         break;
+
         case IOWAIT:
             sys8(caller);
         break;
+
         default: //everything else
             PassUpOrDie(caller, SYSTRAPHAND);
         break;
@@ -103,9 +92,9 @@ void sysHandler(){
 }
 
 HIDDEN void sys1(state_PTR callingProc){
-    pcb_PTR temp= allocPcb();
+    pcb_PTR temp = allocPcb();
     
-    if(temp==NULL){
+    if(temp == NULL){
         //no free pcbs
         callingProc-> /*which register*/ =FAILURE;
         LDST(callingProc);
@@ -136,11 +125,10 @@ HIDDEN void sys2(){
     }
     else{
         //has children.... Must Kill them all
-        KILLAllTHECHILDREN(currentProc);
+        killAllChildren(currentProc);
     }
 
     currentProc=NULL;
-
     scheduler();
 }
 
@@ -168,12 +156,12 @@ HIDDEN void sys3(state_PTR callingProc){
 
 
 HIDDEN void sys4(state_PTR callingProc){
-    int* sem=(int*) callingProc -> /*register*/;
+    int* sem = (int*) callingProc -> /*register*/;
     sem=*sem-1;
 
     if(*sem <0){
         //something controls sem
-        copyState(callingProc, &(currentProc ->p_s));
+        copyState(callingProc, &(currentProc->p_s));
         insertBlocked(sem, currentProc);
         scheduler();
     }
@@ -184,28 +172,32 @@ HIDDEN void sys4(state_PTR callingProc){
 
 
 
-HIDDEN void sys5(state_PTR callingProc){
-    switch(caller-> /*register*/){
+HIDDEN void sys5(state_PTR callingProc)
+{
+    switch(caller-> /*register*/)
+    {
         case TLBTRAPHAND:
             if(currentProc->TLB_NEW != NULL){
                 sys2(); //already called this once
             }
-            currentProc -> TLB_NEW=(state_PTR) callingProc -> /*register*/;
-            currentProc -> TLB_OLD=(state_PTR) callingProc -> /*register*/;
+            currentProc->TLB_NEW = (state_PTR)callingProc-> /*register*/;
+            currentProc->TLB_OLD = (state_PTR)callingProc-> /*register*/;
             break;
+
         case PROGTRAPHAND: 
             if(currentProc-> PRGRM_OLD != NULL){
                 sys2(); //already called this once
             }
-            currentProc -> PRGRM_NEW=(state_PTR) callingProc -> /*register*/;
-            currentProc -> PRGRM_OLD=(state_PTR) callingProc -> /*register*/;
+            currentProc->PRGRM_NEW = (state_PTR)callingProc -> /*register*/;
+            currentProc->PRGRM_OLD = (state_PTR)callingProc -> /*register*/;
             break;
+
         case SYSTRAPHAND: 
             if(currentProc-> SYS_OLD != NULL){
                 sys2(); //already called this once
             }
-            currentProc -> SYS_NEW=(state_PTR) callingProc -> /*register*/;
-            currentProc -> SYS_OLD=(state_PTR) callingProc -> /*register*/;
+            currentProc->SYS_NEW = (state_PTR)callingProc-> /*register*/;
+            currentProc->SYS_OLD = (state_PTR)callingProc-> /*register*/;
             break;
     }
     LDST(callingProc);
@@ -217,12 +209,15 @@ HIDDEN void sys7(state_PTR callingProc);
 HIDDEN void sys8(state_PTR callingProc);
 
 
-HIDDEN void KILLALLTHECHILDREN(pcb_PTR top){
+HIDDEN void killAllChildren(pcb_PTR top){
    //write later
 }
 
 
-HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
+HIDDEN void passUpOrDie(state_PTR callingProc,int cause)
+{
+    src->cp
+}
 HIDDEN void copyState(state_PTR source, state_PTR destination);
 HIDDEN void programTrapHandler();
 HIDDEN void tlbManager();

@@ -13,8 +13,8 @@
 #define MAXPROC  		 20
 #define BOOL             int //Got this idea from Neal
 #define MAX_INT          0xFFFFFFFF
-#define FAILURE			-1
-#define SUCCESS			0
+#define FAILURE			 -1
+#define SUCCESS			 0
 
 
 /*Number of device semaphores
@@ -52,8 +52,8 @@
 
 //sysCall values
 
-#define NEWCHILDPROC 	 1
-#define KILLPROC         2
+#define BIRTH        	 1
+#define DEATH            2
 #define SIGNAL   		 3
 #define WAIT 		     4
 #define UNSURE       	 5 //GIVE THIS A BETTER NAME
@@ -62,10 +62,10 @@
 #define IOWAIT 			 8
 
 
-
-#define TLBTRAPHAND     0
-#define PROGTRAPHAND    1
-#define SYSTRAPHAND		2
+//error cases
+#define TLBTRAP     0
+#define PROGTRAP    1
+#define SYSTRAP		2
 
 
 
