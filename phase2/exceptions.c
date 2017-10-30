@@ -231,20 +231,20 @@ HIDDEN void sys8(state_t callingProc){
     int lineNumber, deviceNumber, read, index;
     int* sem;
 
-    lineNumber= callingProc ->/*register*/;
-    deviceNumber = callingProc ->/*register*/;
-    read = callingProc -> /*register*/;
+    lineNumber= callingProc -> a2;
+    deviceNumber = callingProc ->a3;
+    read = callingProc -> a4;
 
     if(lineNumber<DISK || lineNumber>UMMM){
         //Invalid request
         sys2(); 
     }
 
-    if(lineNumber == UMMM && read==TRUE){
-        index = /*indexing trouble*/;
+    if(lineNumber == TERMINAL && read==TRUE){
+        index = deviceNumber*8+lineNumber+8;
     }
     else{
-        index= /*indexing trouble*/;
+        index= index = deviceNumber*8+lineNumber;
     }
     sem=&(sem4[index]);
     sem=*sem-1;
@@ -260,7 +260,7 @@ HIDDEN void sys8(state_t callingProc){
 
 
 
-HIDDEN void killAllChildren(pcb_PTR top)
+HIDDEN void KILLALLCHILDREN(pcb_PTR top)
 {
    //write later
 }
