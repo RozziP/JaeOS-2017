@@ -51,7 +51,6 @@
 
 
 //sysCall values
-
 #define BIRTH        	 1
 #define DEATH            2
 #define SIGNAL   		 3
@@ -63,9 +62,9 @@
 
 
 //error cases
-#define TLBTRAP     0
-#define PROGTRAP    1
-#define SYSTRAP		2
+#define TLBTRAP          0
+#define PROGTRAP         1
+#define SYSTRAP		     2
 
 
 #define DISK			3

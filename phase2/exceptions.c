@@ -20,7 +20,6 @@ HIDDEN void sys7(state_PTR callingProc);
 HIDDEN void sys8(state_PTR callingProc);
 HIDDEN void killAllChildren(pcb_PTR top);
 HIDDEN void passUpOrDie(state_PTR callingProc,int cause);
-HIDDEN void copyState(state_PTR source, state_PTR destination);
 
 void tlbHandler()
 {
@@ -42,6 +41,7 @@ void sysHandler()
     callingProc = (state_PTR) SYS_OLD;
     requestedSysCall = callingProc-> //where to find this info?
 
+    //Unauthorized access, shut it down
     if(requestedSysCall > 0 && requestedSysCall < 9 && callingProc->p_s->cpsr = USRMODE)
     {
         programTrapHandler();
@@ -82,7 +82,7 @@ void sysHandler()
         break;
 
         default: //everything else
-            PassUpOrDie(caller, SYSTRAPHAND);
+            PassUpOrDie(caller, SYSTRAP);
         break;
     }
 
@@ -106,8 +106,6 @@ HIDDEN void sys1(state_PTR callingProc){
 
     //put it on the ready queue
     insertProcQ(&readyQueue, temp);
-
-    copyState(callingProc->/*register*/, &temp -> p_s)
 
     callingProc -> /*register*/ = SUCCESS;
 
@@ -140,7 +138,7 @@ HIDDEN void sys3(state_PTR callingProc){
 
     if(*sem <=0){
         //a proc is waiting on the sem
-        tempProc=removeBlocked(sem);
+        tempProc = removeBlocked(sem);
         
         if(tempProc !=NULL){
             //put on ready queue
@@ -161,7 +159,6 @@ HIDDEN void sys4(state_PTR callingProc){
 
     if(*sem <0){
         //something controls sem
-        copyState(callingProc, &(currentProc->p_s));
         insertBlocked(sem, currentProc);
         scheduler();
     }
@@ -176,7 +173,7 @@ HIDDEN void sys5(state_PTR callingProc)
 {
     switch(caller-> /*register*/)
     {
-        case TLBTRAPHAND:
+        case TLBTRAP:
             if(currentProc->TLB_NEW != NULL)
             {
                 sys2(); //already called this once
@@ -185,8 +182,8 @@ HIDDEN void sys5(state_PTR callingProc)
             currentProc->TLB_OLD = (state_PTR)callingProc-> /*register*/;
             break;
 
-        case PROGTRAPHAND: 
-            if(currentProc -> programTrapNew != NULL)
+        case PROGTRAP: 
+            if(currentProc -> PRGRM_NEW != NULL)
             {
                 sys2(); //already called this once
             }
@@ -194,7 +191,7 @@ HIDDEN void sys5(state_PTR callingProc)
             currentProc->PRGRM_OLD = (state_PTR)callingProc -> /*register*/;
             break;
 
-        case SYSTRAPHAND: 
+        case SYSTRAP: 
             if(currentProc-> SYS_OLD != NULL)
             {
                 sys2(); //already called this once
@@ -208,13 +205,15 @@ HIDDEN void sys5(state_PTR callingProc)
 
 
 
-HIDDEN void sys6(state_PTR callingProc){
+HIDDEN void sys6(state_PTR callingProc)
+{
     //do later b/c time stuff
 }
 
 
 
-HIDDEN void sys7(state_PTR callingProc){
+HIDDEN void sys7(state_PTR callingProc)
+{
     //do later b/c time stuff
 }
 
@@ -241,9 +240,8 @@ HIDDEN void sys8(state_PTR callingProc){
     }
     sem=&(sem4[index]);
     sem=*sem-1;
-    if (*sem<0){
+    if (*sem < 0){
         insertBlocked(sem, currentProc);
-        copyState(caller, &(currentProc -> p_s));
         softBlockCount++;
         scheduler();
     }
@@ -260,27 +258,24 @@ HIDDEN void killAllChildren(pcb_PTR top)
 }
 
 
-HIDDEN void passUpOrDie(state_PTR callingProc,int cause){
+HIDDEN void passUpOrDie(state_PTR callingProc, int cause){
     switch(cause){
-        case SYSTRAPHAND:  
-            if(currentProc -> sysCallNew != NULL){
+        case SYSTRAP:  
+            if(currentProc-> SYS_NEW != NULL){
                 //sys trap called
-                copyState(callingProc, currentProc ->sysCallOld);
-                LDST(currentPRoc -> sysCallNew);
+                LDST(currentPRoc -> SYS_NEW);
             }
         break;
-        case PROGTRAPHAND:  
-            if(currentProc -> programTrapNew != NULL){
+        case PRGRMTRAP:  
+            if(currentProc->PRGRM_NEW != NULL){
                 //sys trap called
-                copyState(callingProc, currentProc ->programTrapOld);
-                LDST(currentPRoc -> programTrapNew);
+                LDST(currentPRoc -> PRGRM_NEW);
             }
         break;
-        case TLBTRAPHAND:  
-            if(currentProc -> tlbNew != NULL){
+        case TLBTRAP:  
+            if(currentProc -> TLB_NEW != NULL){
                 //sys trap called
-                copyState(callingProc, currentProc ->tlbOld);
-                LDST(currentPRoc -> tlbNew);
+                LDST(currentPRoc -> TLB_NEW);
             }
         break;
     }
