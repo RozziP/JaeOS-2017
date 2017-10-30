@@ -32,8 +32,8 @@ HIDDEN void sys7(state_t callingProc);
 HIDDEN void sys8(state_t callingProc);
 HIDDEN void KILLALLTHECHILDREN(pcb_PTR top);
 HIDDEN void passUpOrDie(state_t callingProc,int cause);
-HIDDEN void programTrapHandler();
-HIDDEN void tlbManager();
+void programTrapHandler();
+void tlbManager();
 
 void tlbHandler()
 {
