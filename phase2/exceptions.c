@@ -47,6 +47,7 @@ void prgrmTrapHandler()
     passUpOrDie(caller, PRGRMTRAP);
 }
 
+
 void sysHandler(){
     state_t callingProc;
     state_t program;
@@ -293,17 +294,7 @@ HIDDEN void passUpOrDie(state_t callingProc,int cause){
 
 
 
-HIDDEN void programTrapHandler(){
-    state_t callingProc = (state_t) TLB_OLD;
-	PassUpOrDie(callingProc, TLBTRAPHAND);
-}
 
-
-
-HIDDEN void tlbManager(){
-    state_PTR callingProc = (state_PTR) PRGRM_OLD;
-	PassUpOrDie(callingProc, PROGTRAPHAND;
-}
 
 
 
