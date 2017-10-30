@@ -1,7 +1,7 @@
-#include "asl.e"
-#include "pcb.e"
-#include "../h/const.h"
-#include "../h/types.h"
+#include "../e/asl.e"
+#include "../e/pcb.e"
+#include "const.h"
+#include "types.h"
 
 int procCount;
 int softBlockCnt;
