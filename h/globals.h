@@ -1,3 +1,6 @@
+#ifndef GLOBALS
+#define GLOBALS
+
 #include "../e/asl.e"
 #include "../e/pcb.e"
 #include "const.h"
@@ -8,3 +11,5 @@ int softBlockCnt;
 int sema4[DEVICES];
 pcb_PTR currentProc;
 pcb_PTR readyQueue;
+
+#endif

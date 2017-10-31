@@ -17,14 +17,6 @@
 
 void initArea(state_t* newArea);
 
-//Globals
-// int procCount;
-// int softBlockCnt;
-// int sema4[DEVICES];
-// pcb_PTR currentProc;
-// pcb_PTR readyQueue;
-
-
 main()
 {
     initASL();
@@ -66,9 +58,6 @@ main()
     starter->p_s->CP15_Control = ALLOFF;         //VM off
     insertProcQ(&readyQueue, starter);
 
-    //timer = 5000, or some equivalent
-    setTimer(QUANTUM);
-
     //off to see the wizard
     scheduler();
 }
@@ -77,9 +66,35 @@ main()
 Populate the fields of the given new area
 This function just saves eight lines of code in main()
 */
-void initArea(state_t* newArea)
+HIDDEN void initArea(state_t* newArea)
 {
     newArea->sp   = RAMTOP;
     newArea->cpsr = INTS_OFF | SYSMODE;   //Interrupts off, kernel mode
     newArea->CP15_Control = ALLOFF;     //VM off
+}
+
+void copyState(state_t* src, state_t* dest)
+{   
+    dest->a1 = src->a1;
+    dest->a2 = src->a2;
+    dest->a3 = src->a3;
+    dest->a4 = src->a4;
+    dest->v1 = src->v1;
+    dest->v2 = src->v2;
+    dest->v3 = src->v3;
+    dest->v4 = src->v4;
+    dest->v5 = src->v5;
+    dest->v6 = src->v6;
+    dest->sl = src->sl;
+    dest->fp = src->fp;
+    dest->ip = src->ip;
+    dest->sp = src->sp;
+    dest->lr = src->lr;
+    dest->pc = src->pc;
+    dest->cpsr = src->cpsr;
+    dest->CP15_Control = src->CP15_Control;
+    dest->CP15_EntryHi = src->CP15_EntryHi;
+    dest->CP15_Cause = src->CP15_Cause;
+    dest->TOD_Hi = src->TOD_Hi;
+    dest->TOD_Low = src->TOD_Low;
 }

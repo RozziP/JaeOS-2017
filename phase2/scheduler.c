@@ -14,6 +14,8 @@
 #include "../e/globals.h"
 #include "../h/const.h"
 #include "../h/types.h"
+#include "/usr/include/uarm/libuarm.h"
+
 
 scheduler()
 {   
@@ -27,14 +29,13 @@ scheduler()
             HALT();
         }
 
-        if(procCount > 0 && softBlockCnt == 0)
+        if(softBlockCnt == 0)
         {
             PANIC();
         }
-
-        if(procCount > 0 && softBlockCnt > 0)
+        else
         {
-            currentProc->p_s->cpsr = currentProc->p_s->cpsr | INTS_ON; //Turn interrupts on - this might not work
+            setStatus(getStatus() | INTS_ON);
             WAIT();
         }
 

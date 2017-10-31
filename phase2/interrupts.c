@@ -2,6 +2,22 @@
 interrupts.c
 
 */
+#include "../e/asl.e"
+#include "../e/pcb.e"
+#include "../e/globals.h"
+#include "../h/const.h"
+#include "../h/types.h"
+#include "/usr/include/uarm/libuarm.h"
+
+
+interruptHandler()
+{
+    //int cause = (state_t*)INT_OLD->CP15_Cause;
+    unsigned int cause = getCause();
+    
+}
+
+
 /*
 interruptHandler()
 {
@@ -13,3 +29,4 @@ interruptHandler()
     signal the sem of the device
     LDST(oldInt)
 }
+*/
