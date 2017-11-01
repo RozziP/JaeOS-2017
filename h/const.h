@@ -66,19 +66,33 @@
 #define PROGTRAP         1
 #define SYSTRAP		     2
 
-
+#define NULLLINES       3
 #define DISK			3
 #define TAPE    		4
 #define NETWORK    		5
 #define PRINTER 		6
 #define TERMINAL		7
 
+#define BIT1            0x00000001
+#define BIT2            0x00000002
+#define BIT3			0x00000004
+#define BIT4			0x00000008
+#define BIT5			0x00000010
+#define BIT6			0x00000020
+#define BIT7   	    	0x00000040
+#define BIT8   	    	0x00000080
 
-#define LINE3			0x00000004
-#define LINE4			0x00000008
-#define LINE5			0x00000010
-#define LINE6			0x00000020
-#define LINE7   		0x00000040
+
+#define DISKMAP          0x00006FE0
+#define TAPEMAP          0x00006FE4
+#define NETWORKMAP       0x00006FE8
+#define PRINTMAP         0x00006FEC
+#define TERMINALMAP      0x00006FF0
+
+#define DEVICEREGSTART   0X00000040
+#define DEVICEREGSIZE    22
+
+
 
 
 
