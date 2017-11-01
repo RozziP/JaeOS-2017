@@ -18,27 +18,27 @@ interruptHandler()
     int deviceNum;
 
     //Determine which line caused the interrupt
-    if(cause == /*line 3*/)
+    if(cause & LINE3 !=0)
     {
        line = DISK;
     }
 
-    else if(cause == /*line 4*/)
+    else if(cause & LINE4 !=0)
     {
        line = TAPE;
     }
 
-    else if(cause == /*line 5*/)
+    else if(cause & LINE5 !=0)
     {
        line = NETWORK;
     }
 
-    else if(cause == /*line 6*/)
+    else if(cause & LINE6 !=0)
     {
        line = PRINTER;
     }
 
-    else if(cause == /*line 7*/)
+    else if(cause & LINE7 !=0)
     {
        line = TERMINAL;
     }
