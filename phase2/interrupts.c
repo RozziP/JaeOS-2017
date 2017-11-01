@@ -61,11 +61,13 @@ interruptHandler()
 
     //copy status register and put in r0???
     //set command field to ACK???
-
+    //THEYRE STRUCTS
+    
     //signal the device's semaphore
     int sem = sema4[/*device*/];
     sem++;
     pcb_PTR temp = removeBlocked(sem);
+    if(temp == NULL) PANIC();
     insertProcQ(&readyQueue, temp);
     softBlockCnt--;
 

@@ -49,7 +49,6 @@
 #define SYS_OLD          0x00007210
 #define SYS_NEW          0x00007268
 
-
 //sysCall values
 #define BIRTH        	 1
 #define DEATH            2
@@ -66,22 +65,21 @@
 #define PROGTRAP         1
 #define SYSTRAP		     2
 
-#define NULLLINES       3
-#define DISK			3
-#define TAPE    		4
-#define NETWORK    		5
-#define PRINTER 		6
-#define TERMINAL		7
+#define NULLLINES        3
+#define DISK			 3
+#define TAPE    		 4
+#define NETWORK    		 5
+#define PRINTER 		 6
+#define TERMINAL		 7
 
-#define BIT1            0x00000001
-#define BIT2            0x00000002
-#define BIT3			0x00000004
-#define BIT4			0x00000008
-#define BIT5			0x00000010
-#define BIT6			0x00000020
-#define BIT7   	    	0x00000040
-#define BIT8   	    	0x00000080
-
+#define BIT1             0x00000001
+#define BIT2             0x00000002
+#define BIT3			 0x00000004
+#define BIT4			 0x00000008
+#define BIT5			 0x00000010
+#define BIT6			 0x00000020
+#define BIT7   	    	 0x00000040
+#define BIT8   	    	 0x00000080
 
 #define DISKMAP          0x00006FE0
 #define TAPEMAP          0x00006FE4
