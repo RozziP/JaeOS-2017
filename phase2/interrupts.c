@@ -105,35 +105,35 @@ HIDDEN int getDeviceNumber(int lineNum){
     }
 
     if((cause & BIT1) != 0) {
-		return 0;
-	}
+        return 0;
+    }
 
-	else if((cause & BIT2) != 0){
-		return 1;
-	}
+    else if((cause & BIT2) != 0){
+        return 1;
+    }
 
-	else if((cause & BIT3) != 0){
-		return 2;
-	}
+    else if((cause & BIT3) != 0){
+        return 2;
+    }
 
-	else if((cause & BIT4) != 0){
-		return 3;
-	}
+    else if((cause & BIT4) != 0){
+        return 3;
+    }
 
-	else if((cause & BIT5) != 0){
-		return 4;
-	}
+    else if((cause & BIT5) != 0){
+        return 4;
+    }
 
-	else if((cause & BIT6) != 0){
-		return 5;
-	}
+    else if((cause & BIT6) != 0){
+        return 5;
+    }
 
-	else if((cause & BIT7) != 0){
-		return 6;
-	}
+    else if((cause & BIT7) != 0){
+        return 6;
+    }
 
-	else if((cause & BIT8) != 0){
-		return 7;
+    else if((cause & BIT8) != 0){
+        return 7;
     }
     
     PANIC();
