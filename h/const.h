@@ -53,7 +53,7 @@
 #define BIRTH        	 1
 #define DEATH            2
 #define SIGNAL   		 3
-#define WAIT 		     4
+#define WAIT		     4
 #define ESV         	 5 //GIVE THIS A BETTER NAME
 #define CPUTIME 		 6
 #define CLOCKWAIT 		 7

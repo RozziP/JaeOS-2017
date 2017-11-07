@@ -15,26 +15,25 @@ typedef struct pcb_t
     struct pcb_t
     /* process queue fields */
         *p_next,		// ptr to next entry 
-        *p_prev;       // ptr to previous entry 
+        *p_prev;        // ptr to previous entry 
     struct pcb_t
     /* process tree fields */ 
         *p_prnt,        // ptr to parent  
         *p_child,       // ptr to 1st child 
-        *p_prevSib,      // ptr to previous sibling		
-        *p_nextSib;	        // ptr to next sibling
+        *p_prevSib,     // ptr to previous sibling		
+        *p_nextSib;	    // ptr to next sibling
 
     /* process status information */
     state_t p_s;		//processor state
     int*	p_semAdd;   //ptr to semaphore on
 
     /* which proc is blocked */
-
-    state_PTR sysCallNew;
-    state_PTR sysCallOld;
-    state_PTR programTrapNew;
-    state_PTR programTrapOld;
-    state_PTR tlbNew;
-    state_PTR tlbOld;
+    state_t* sysCallNew;
+    state_t* sysCallOld;
+    state_t* programTrapNew;
+    state_t* programTrapOld;
+    state_t* tlbNew;
+    state_t* tlbOld;
     
 }
 pcb_t, *pcb_PTR;

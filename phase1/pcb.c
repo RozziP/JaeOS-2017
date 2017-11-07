@@ -75,7 +75,7 @@ pcb_PTR allocPcb()
 }
 
 /* 
-This method is used to initialize a variable to be tail pointer to a
+This function is used to initialize a variable to be tail pointer to a
 process queue.
 Return a pointer to the tail of an empty process queue; i.e. NULL. 
 */

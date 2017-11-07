@@ -62,17 +62,6 @@ main()
     scheduler();
 }
 
-/*
-Populate the fields of the given new area
-This function just saves eight lines of code in main()
-*/
-HIDDEN void initArea(state_t* newArea)
-{
-    newArea->sp   = RAMTOP;
-    newArea->cpsr = INTS_OFF | SYSMODE;   //Interrupts off, kernel mode
-    newArea->CP15_Control = ALLOFF;     //VM off
-}
-
 void copyState(state_t* src, state_t* dest)
 {   
     dest->a1 = src->a1;
@@ -97,4 +86,15 @@ void copyState(state_t* src, state_t* dest)
     dest->CP15_Cause = src->CP15_Cause;
     dest->TOD_Hi = src->TOD_Hi;
     dest->TOD_Low = src->TOD_Low;
+}
+
+/*
+Populate the fields of the given new area
+This function just saves eight lines of code in main()
+*/
+HIDDEN void initArea(state_t* newArea)
+{
+    newArea->sp   = RAMTOP;
+    newArea->cpsr = INTS_OFF | SYSMODE;   //Interrupts off, kernel mode
+    newArea->CP15_Control = ALLOFF;     //VM off
 }
