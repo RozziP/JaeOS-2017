@@ -30,8 +30,8 @@ typedef struct pcb_t
     /* which proc is blocked */
     state_t* sysCallNew;
     state_t* sysCallOld;
-    state_t* programTrapNew;
-    state_t* programTrapOld;
+    state_t* prgrmTrapNew;
+    state_t* prgrmTrapOld;
     state_t* tlbNew;
     state_t* tlbOld;
     

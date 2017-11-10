@@ -7,7 +7,6 @@ exceptions.c
 #include "../e/pcb.e"
 #include "../e/initial.e"
 #include "../e/scheduler.e"
-#include "../h/globals.h"
 #include "../h/const.h"
 #include "../h/types.h"
 
@@ -25,7 +24,7 @@ HIDDEN void passUpOrDie(state_t* callingProc, int cause);
 void tlbHandler()
 {
     state_t* caller = TLB_OLD;
-    passUpOrDie(caller, TLB);
+    passUpOrDie(caller, TLBTRAP);
 }
 
 void prgrmTrapHandler()
@@ -40,11 +39,11 @@ void sysHandler(){
     state_t* program;
     int requestedSysCall;
     
-    callingProc = (state_t*) SYS_OLD;
+    state_t* callingProc = (state_t*) SYS_OLD;
     requestedSysCall = callingProc->a1;
 
     //Unauthorized access, shut it down
-    if(requestedSysCall > 0 && requestedSysCall < 9 && callingProc->p_s->cpsr = USRMODE)
+    if((requestedSysCall > 0) && (requestedSysCall < 9) && (callingProc->cpsr = USRMODE))
     {
         prgramTrapHandler();
     }
@@ -52,7 +51,7 @@ void sysHandler(){
     //Direct to syscall
     switch(requestedSysCall){
         case BIRTH:
-            sys1(caller);
+            sys1(callingProc);
         break;
 
         case DEATH:
@@ -84,7 +83,7 @@ void sysHandler(){
         break;
 
         default: //everything else
-            PassUpOrDie(caller, SYSTRAP);
+            PassUpOrDie(callingProc, SYSTRAP);
         break;
     }
 
@@ -101,10 +100,10 @@ HIDDEN void sys1(state_t* callingProc){
         callingProc->a1 = FAILURE;
         LDST(callingProc);
     }
-    ++procCount
+    ++procCount;
 
     //Make new process a progeny of the callingProcess
-    insertChild(currentProc, temp)
+    insertChild(currentProc, temp);
 
     //put it on the ready queue
     insertProcQ(&readyQueue, temp);
@@ -171,12 +170,12 @@ HIDDEN void sys4(state_t* callingProc){
 
 
 
-HIDDEN void sys5(state_PTR callingProc)
+HIDDEN void sys5(state_t* callingProc)
 {
-    switch(caller->/*register*/)
+    switch(callingProc->a1)
     {
         case TLBTRAP:
-            if(currentProc->TLB_NEW != NULL)
+            if(currentProc->tlbNew != NULL)
             {
                 sys2(); //already called this once
             }
@@ -184,17 +183,17 @@ HIDDEN void sys5(state_PTR callingProc)
             currentProc -> sysCallOld=(state_t*)callingProc->a3;
             break;
 
-        case PROGTRAP: 
-            if(currentProc -> PRGRM_NEW != NULL)
+        case PRGRMTRAP: 
+            if(currentProc -> prgrmTrapNew != NULL)
             {
                 sys2(); //already called this once
             }
-            currentProc -> programTrapNew = (state_t*)callingProc->a4;
-            currentProc -> programTrapOld = (state_t*)callingProc->a3;
+            currentProc -> prgrmTrapNew = (state_t*)callingProc->a4;
+            currentProc -> prgrmTrapOld = (state_t*)callingProc->a3;
             break;
 
         case SYSTRAP: 
-            if(currentProc-> SYS_OLD != NULL)
+            if(currentProc-> sysCallNew != NULL)
             {
                 sys2(); //already called this once
             }
@@ -227,7 +226,8 @@ HIDDEN void sys8(state_t* callingProc){
     deviceNumber = callingProc->a3;
     read = callingProc->a4;
 
-    if(lineNumber < DISK || lineNumber > UMMM){
+    if(lineNumber < DISK || lineNumber > UMMM) //wtf patrick
+    {
         //Invalid request
         sys2(); 
     }
@@ -279,7 +279,7 @@ HIDDEN void killAllChildren(pcb_PTR top)
         outBlocked(top);
 
         //is it on a device semaphore?
-        if(sem >= &(sema4[0]) && sem <= &(sema4[DEVICES-1])
+        if(sem >= &(sema4[0]) && sem <= &(sema4[DEVICES-1]))
         {
             softBlockCount--; //not anymore
         }

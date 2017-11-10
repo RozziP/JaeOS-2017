@@ -62,7 +62,7 @@
 
 //error cases
 #define TLBTRAP          0
-#define PROGTRAP         1
+#define PRGRMTRAP        1
 #define SYSTRAP		     2
 
 #define NULLLINES        3

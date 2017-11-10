@@ -11,7 +11,7 @@
 \*==========================================================================*/
 #include "../e/asl.e"
 #include "../e/pcb.e"
-#include "../e/globals.h"
+#include "../e/initial.e"
 #include "../h/const.h"
 #include "../h/types.h"
 
@@ -54,7 +54,7 @@ main()
     pcb_PTR starter = allocPcb();
     starter->p_s->sp   = (RAMTOP - FRAMESIZE); 
     starter->p_s->pc   = (unsigned int)test();   //start by running test() in p2test.c
-    starter->p_s->cpsr = INTS_OFF | SYSMODE;     //Interrupts off, kernel mode
+    starter->p_s->cpsr = ALLOFF | SYSMODE;       //Interrupts off, kernel mode
     starter->p_s->CP15_Control = ALLOFF;         //VM off
     insertProcQ(&readyQueue, starter);
 

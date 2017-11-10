@@ -11,13 +11,31 @@
  *		Aborts as soon as an error is detected.
  *
  *      Modified by Michael Goldweber on May 15, 2004
+ *		Modified by Michael Goldweber: Fall 2017
  */
 
+/* 
 #include "../h/const.h"
 #include "../h/types.h"
+*/
 #include "/usr/include/uarm/libuarm.h"
+#include "/usr/include/uarm/uARMtypes.h"
+#include "/usr/include/uarm/arch.h"
+#include "/usr/include/uarm/uARMconst.h"
+
+#define ALLOFF				0x00000000
+#define INTSDISABLED		0x000000C0
+
+#define TLBTRAP			0
+#define PROGTRAP		1
+#define SYSTRAP			2
+
 
 typedef unsigned int devregtr;
+
+#define cpu_t		int
+#define EOS			'\0'
+#define TIMESCALEADDR	BUS_REG_TIME_SCALE
 
 /* hardware constants */
 #define PRINTCHR	2
@@ -27,11 +45,10 @@ typedef unsigned int devregtr;
 #define CLOCKINTERVAL	100000UL	/* interval to V clock semaphore */
 
 #define TERMSTATMASK	0xFF
-#define CAUSEMASK		0xFF
+#define CAUSEMASK		0x0000001F
 #define VMOFF 			0xF8FFFFFF
 
 #define SYSCAUSE		(0x8 << 2)
-#define BUSERROR		6
 #define RESVINSTR   	10
 #define ADDRERROR		4
 
@@ -52,7 +69,8 @@ typedef unsigned int devregtr;
 #define MINCLOCKLOOP	3000	
 
 #define BADADDR			0xFFFFFFFF
-#define	TERM0ADDR		0x10000250
+/* #define	TERM0ADDR		0x10000250 */
+#define TERM0ADDR		DEV_REG_ADDR(7, 0)
 
 
 /* Software and other constants */
@@ -107,7 +125,7 @@ int		p4inc=1;		/* p4 incarnation number */
 unsigned int p5Stack;	/* so we can allocate new stack for 2nd p5 */
 
 int creation = 0; 				/* return code for SYSCALL invocation */
-memaddr *p5MemLocation = 0;		/* To cause a p5 trap */
+unsigned int *p5MemLocation = (unsigned int *)0x00000034;		/* To cause a p5 trap */
 
 void	p2(),p3(),p4(),p5(),p5a(),p5b(),p6(),p7(),p7a(),p5prog(),p5mm();
 void	p5sys(),p8root(),child1(),child2(),p8leaf();
@@ -117,20 +135,19 @@ void	p5sys(),p8root(),child1(),child2(),p8leaf();
 void print(char *msg) {
 
 	char * s = msg;
-	devregtr * base = (devregtr *) (TERM0ADDR);
-	devregtr status;
+	termreg_t * base = (termreg_t *) (TERM0ADDR);
+	unsigned int status;
 	
 	SYSCALL(PASSERN, (int)&term_mut, 0, 0);				/* P(term_mut) */
 	while (*s != EOS) {
-		*(base + 3) = PRINTCHR | (((devregtr) *s) << BYTELEN);
-		status = SYSCALL(WAITIO, TERMINT, 0, 0);	
+		base->transm_command = PRINTCHR | (((unsigned int) *s) << BYTELEN);
+		status = SYSCALL(WAITIO, IL_TERMINAL, 0, 0);	
 		if ((status & TERMSTATMASK) != RECVD)
 			PANIC();
 		s++;	
 	}
 	SYSCALL(VERHOGEN, (int)&term_mut, 0, 0);				/* V(term_mut) */
 }
-
 
 /*                                                                   */
 /*                 p1 -- the root process                            */
@@ -146,78 +163,80 @@ void test() {
 	/* set up p2's state */
 	STST(&p2state);			/* create a state area             */	
 	
-	p2state.s_sp = p2state.s_sp - QPAGE;			/* stack of p2 should sit above    */
-	p2state.s_pc = p2state.s_t9 = (memaddr)p2;		/* p2 starts executing function p2 */
-	p2state.s_status = p2state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	/* *** Should CP15_Control be explicitly set? *** */
+	
+	p2state.sp = p2state.sp - QPAGE;			/* stack of p2 should sit above    */
+	p2state.pc = (unsigned int)p2;		/* p2 starts executing function p2 */
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 		
 
 	STST(&p3state);
 
-	p3state.s_sp = p2state.s_sp - QPAGE;
-	p3state.s_pc = p3state.s_t9 = (memaddr)p3;
-	p3state.s_status = p3state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	p3state.sp = p2state.sp - QPAGE;
+	p3state.pc = (unsigned int)p3;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 	
 	
 	STST(&p4state);
 
-	p4state.s_sp = p3state.s_sp - QPAGE;
-	p4state.s_pc = p4state.s_t9 = (memaddr)p4;
-	p4state.s_status = p4state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	p4state.sp = p3state.sp - QPAGE;
+	p4state.pc = (unsigned int)p4;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 	
 	
 	STST(&p5state);
 	
-	p5Stack = p5state.s_sp = p4state.s_sp - (2 * QPAGE);	/* because there will 2 p4 running*/
-	p5state.s_pc = p5state.s_t9 = (memaddr)p5;
-	p5state.s_status = p5state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	p5Stack = p5state.sp = p4state.sp - (2 * QPAGE);	/* because there will 2 p4 running*/
+	p5state.pc = (unsigned int)p5;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 
 	STST(&p6state);
 	
-	p6state.s_sp = p5state.s_sp - (2 * QPAGE);
-	p6state.s_pc = p6state.s_t9 = (memaddr)p6;
-	p6state.s_status = p6state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	p6state.sp = p5state.sp - (2 * QPAGE);
+	p6state.pc = (unsigned int)p6;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 	
 	
 	STST(&p7state);
 	
-	p7state.s_sp = p6state.s_sp - QPAGE;
-	p7state.s_pc = p7state.s_t9 = (memaddr)p7;
-	p7state.s_status = p7state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	p7state.sp = p6state.sp - QPAGE;
+	p7state.pc = (unsigned int)p7;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 
 	STST(&p8rootstate);
-	p8rootstate.s_sp = p7state.s_sp - QPAGE;
-	p8rootstate.s_pc = p8rootstate.s_t9 = (memaddr)p8root;
-	p8rootstate.s_status = p8rootstate.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	p8rootstate.sp = p7state.sp - QPAGE;
+	p8rootstate.pc = (unsigned int)p8root;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
     
 	STST(&child1state);
-	child1state.s_sp = p8rootstate.s_sp - QPAGE;
-	child1state.s_pc = child1state.s_t9 = (memaddr)child1;
-	child1state.s_status = child1state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	child1state.sp = p8rootstate.sp - QPAGE;
+	child1state.pc = (unsigned int)child1;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 	
 	STST(&child2state);
-	child2state.s_sp = child1state.s_sp - QPAGE;
-	child2state.s_pc = child2state.s_t9 = (memaddr)child2;
-	child2state.s_status = child2state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	child2state.sp = child1state.sp - QPAGE;
+	child2state.pc = (unsigned int)child2;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 	
 	STST(&gchild1state);
-	gchild1state.s_sp = child2state.s_sp - QPAGE;
-	gchild1state.s_pc = gchild1state.s_t9 = (memaddr)p8leaf;
-	gchild1state.s_status = gchild1state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	gchild1state.sp = child2state.sp - QPAGE;
+	gchild1state.pc = (unsigned int)p8leaf;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 
 	STST(&gchild2state);
-	gchild2state.s_sp = gchild1state.s_sp - QPAGE;
-	gchild2state.s_pc = gchild2state.s_t9 = (memaddr)p8leaf;
-	gchild2state.s_status = gchild2state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	gchild2state.sp = gchild1state.sp - QPAGE;
+	gchild2state.pc = (unsigned int)p8leaf;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 	
 	STST(&gchild3state);
-	gchild3state.s_sp = gchild2state.s_sp - QPAGE;
-	gchild3state.s_pc = gchild3state.s_t9 = (memaddr)p8leaf;
-	gchild3state.s_status = gchild3state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	gchild3state.sp = gchild2state.sp - QPAGE;
+	gchild3state.pc = (unsigned int)p8leaf;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 	
 	STST(&gchild4state);
-	gchild4state.s_sp = gchild3state.s_sp - QPAGE;
-	gchild4state.s_pc = gchild4state.s_t9 = (memaddr)p8leaf;
-	gchild4state.s_status = gchild4state.s_status | IEPBITON | CAUSEINTMASK | TEBITON;
+	gchild4state.sp = gchild3state.sp - QPAGE;
+	gchild4state.pc = (unsigned int)p8leaf;
+	p2state.cpsr = ALLOFF | STATUS_SYS_MODE;
 	
 	
 	/* create process p2 */
@@ -266,7 +285,7 @@ void test() {
 	}
 
 	print("p1 finishes OK -- TTFN\n");
-	* ((memaddr *) BADADDR) = 0;				/* terminate p1 */
+	* ((unsigned int *) BADADDR) = 0;				/* terminate p1 */
 
 	/* should not reach this point, since p1 just got a program trap */
 	print("error: p1 still alive after progtrap & no trap vector\n");
@@ -279,6 +298,7 @@ void p2() {
 	int		i;				/* just to waste time  */
 	cpu_t	now1,now2;		/* times of day        */
 	cpu_t	cpu_t1,cpu_t2;	/* cpu time used       */
+	cpu_t	targetTime;
 
 	SYSCALL(PASSERN, (int)&startp2, 0, 0);				/* P(startp2)   */
 
@@ -287,7 +307,7 @@ void p2() {
 	/* initialize all semaphores in the s[] array */
 	for (i=0; i<= MAXSEM; i++)
 		s[i] = 0;
-
+	
 	/* V, then P, all of the semaphores in the s[] array */
 	for (i=0; i<= MAXSEM; i++)  {
 		SYSCALL(VERHOGEN, (int)&s[i], 0, 0);			/* V(S[I]) */
@@ -296,11 +316,12 @@ void p2() {
 			print("error: p2 bad v/p pairs\n");
 	}
 
+
 	print("p2 v's successfully\n");
 
 	/* test of SYS6 */
 
-	STCK(now1);				/* time of day   */
+	now1 = getTODLO();				/* time of day   */
 	cpu_t1 = SYSCALL(GETCPUTIME, 0, 0, 0);			/* CPU time used */
 
 	/* delay for several milliseconds */
@@ -308,15 +329,16 @@ void p2() {
 		;
 
 	cpu_t2 = SYSCALL(GETCPUTIME, 0, 0, 0);			/* CPU time used */
-	STCK(now2);				/* time of day  */
+	now2 = getTODLO();				/* time of day  */
+	
+	targetTime = (MINLOOPTIME / (*((unsigned int *)BUS_REG_TIME_SCALE))); 
 
-	if (((now2 - now1) >= (cpu_t2 - cpu_t1)) &&
-			((cpu_t2 - cpu_t1) >= (MINLOOPTIME / (* ((cpu_t *)TIMESCALEADDR)))))
+	if (((now2 - now1) >= (cpu_t2 - cpu_t1)) && ((cpu_t2 - cpu_t1) >= targetTime))
 		print("p2 is OK\n");
 	else  {
 		if ((now2 - now1) < (cpu_t2 - cpu_t1))
 			print ("error: more cpu time than real time\n");
-		if ((cpu_t2 - cpu_t1) < (MINLOOPTIME / (* ((cpu_t *)TIMESCALEADDR))))
+		if ((cpu_t2 - cpu_t1) < targetTime)
 			print ("error: not enough cpu time went by\n");
 		print("p2 blew it!\n");
 	}
@@ -337,16 +359,18 @@ void p2() {
 void p3() {
 	cpu_t	time1, time2;
 	cpu_t	cpu_t1,cpu_t2;		/* cpu time used       */
+	cpu_t	targetTime;
 	int		i;
 
 	time1 = 0;
 	time2 = 0;
 
 	/* loop until we are delayed at least half of clock V interval */
-	while (time2-time1 < (CLOCKINTERVAL >> 1) )  {
-		STCK(time1);			/* time of day     */
+	while (time2-time1 < (CLOCKINTERVAL >> 1) )  { 
+		time1 = getTODLO();			/* time of day     */
+		print ("p3 - Timer Started\n");
 		SYSCALL(WAITCLOCK, 0, 0, 0);
-		STCK(time2);			/* new time of day */
+		time2 = getTODLO();			/* new time of day */
 	}
 
 	print("p3 - WAITCLOCK OK\n");
@@ -356,11 +380,13 @@ void p3() {
 	cpu_t1 = SYSCALL(GETCPUTIME, 0, 0, 0);
 
 	for (i=0; i<CLOCKLOOP; i++)
-		SYSCALL(WAITCLOCK, 0, 0, 0);
+		SYSCALL(WAITCLOCK, 0, 0, 0); 
 	
 	cpu_t2 = SYSCALL(GETCPUTIME, 0, 0, 0);
 
-	if (cpu_t2 - cpu_t1 < (MINCLOCKLOOP / (* ((cpu_t *) TIMESCALEADDR))))
+	targetTime = (MINCLOCKLOOP / (*((unsigned int *)BUS_REG_TIME_SCALE))); 
+
+	if ((cpu_t2 - cpu_t1) < targetTime)
 		print("error: p3 - CPU time incorrectly maintained\n");
 	else
 		print("p3 - CPU time correctly maintained\n");
@@ -399,7 +425,7 @@ void p4() {
 	/* and eventually, the parent p4 will terminate, killing  */
 	/* off both p4's.                                         */
 
-	p4state.s_sp -= QPAGE;		/* give another page  */
+	p4state.sp -= QPAGE;		/* give another page  */
 
 	SYSCALL(CREATETHREAD, (int)&p4state, 0, 0);			/* start a new p4    */
 
@@ -420,28 +446,20 @@ void p4() {
 
 /* p5's program trap handler */
 void p5prog() {
-	unsigned int exeCode = pstat_o.s_cause;
-	exeCode = (exeCode & CAUSEMASK) >> 2;
+	unsigned int exeCode = pstat_o.CP15_Cause & CAUSEMASK;
 	switch (exeCode) {
 	case BUSERROR:
 		print("Access non-existent memory\n");
-		pstat_o.s_pc = pstat_o.s_t9 = (memaddr)p5a;   /* Continue with p5a() */
+		pstat_o.pc = (unsigned int)p5a;   /* Continue with p5a() */
 		break;
 		
-	case RESVINSTR:
+	case EXC_RESERVEDINSTR:
 		print("privileged instruction\n");
 		/* return in kernel mode */
-		pstat_o.s_status = pstat_o.s_status & KUPBITOFF;
-		pstat_o.s_pc = pstat_o.s_t9 = (memaddr)p5b;
+		pstat_o.cpsr = ALLOFF | STATUS_SYS_MODE;
+		pstat_o.pc = (unsigned int)p5b;
 		break;
-		
-	case ADDRERROR:
-		print("Address Error: KSegOS w/KU=1\n");
-		/* return in kernel mode */
-		pstat_o.s_status = pstat_o.s_status & KUPBITOFF;
-		pstat_o.s_pc = pstat_o.s_t9 = (memaddr)p5b;
-		break;
-		
+				
 	default:
 		print("other program trap\n");
 	}
@@ -450,28 +468,25 @@ void p5prog() {
 }
 
 /* p5's memory management trap handler */
-void p5mm(unsigned int cause) {
+void p5mm() {
 	print("memory management trap\n");
-	mstat_o.s_status = (mstat_o.s_status & VMOFF) | KUPBITON;  /* VM off, user mode on */
-	mstat_o.s_pc = mstat_o.s_t9 = (memaddr)p5b;  /* return to p5b */
-	mstat_o.s_sp = p5Stack-QPAGE;				/* Start with a fresh stack */
+	/* VM off, user mode on */
+	mstat_o.cpsr = ALLOFF | STATUS_USER_MODE;  
+	mstat_o.CP15_Control = ALLOFF;
+	mstat_o.pc = (unsigned int)p5b;  /* return to p5b */
+	mstat_o.sp = p5Stack-QPAGE;				/* Start with a fresh stack */
 	LDST(&mstat_o);
 }
 
 /* p5's SYS trap handler */
-void p5sys(unsigned int cause) {
-	unsigned int p5status = sstat_o.s_status;
-	p5status = (p5status << 28) >> 31; 
-	switch(p5status) {
-	case ON:
-		print("High level SYS call from user mode process\n");
-		break;
-	
-	case OFF:
+void p5sys() {
+	unsigned int p5status = sstat_o.cpsr & STATUS_SYS_MODE;
+	if (p5status == STATUS_SYS_MODE) {
 		print("High level SYS call from kernel mode process\n");
-		break;
 	}
-	sstat_o.s_pc = sstat_o.s_pc + 4;   /*	 to avoid SYS looping */
+	else {
+		print("High level SYS call from user mode process\n");
+	}
 	LDST(&sstat_o);
 }
 
@@ -481,13 +496,13 @@ void p5() {
 
 	/* set up higher level TRAP handlers (new areas) */
 	STST(&pstat_n);
-	pstat_n.s_pc = pstat_n.s_t9 = (memaddr)p5prog;
+	pstat_n.pc = (unsigned int)p5prog;
 	
 	STST(&mstat_n);
-	mstat_n.s_pc = mstat_n.s_t9 = (memaddr)p5mm;
+	mstat_n.pc = (unsigned int)p5mm;
 	
 	STST(&sstat_n);
-	sstat_n.s_pc = sstat_n.s_t9 = (memaddr)p5sys;
+	sstat_n.pc = (unsigned int)p5sys;
 
 	/* trap handlers should operate in complete mutex: no interrupts on */
 	/* this because they must restart using some BIOS area */
@@ -505,12 +520,8 @@ void p5() {
 }
 
 void p5a() {
-	unsigned int p5Status;
-	
 	/* generage a TLB exception by turning on VM without setting up the seg tables */
-	p5Status = getSTATUS();
-	p5Status = p5Status | 0x03000000;
-	setSTATUS(p5Status);
+	setCONTROL(CP15_VM_ON);
 }
 
 /* second part of p5 - should be entered in user mode */
@@ -526,10 +537,10 @@ void p5b() {
 	time1 = 0;
 	time2 = 0;
 	while (time2 - time1 < (CLOCKINTERVAL >> 1))  {
-		STCK(time1);
+		time1 = getTODLO();
 		SYSCALL(WAITCLOCK, 0, 0, 0);
-		STCK(time2);
-	}
+		time2 = getTODLO();
+	} 
 
 	/* if p4 and offspring are really dead, this will increment blkp4 */
 
@@ -564,7 +575,7 @@ void p6() {
 void p7() {
 	print("p7 starts\n");
 
-	* ((memaddr *) BADADDR) = 0;
+	* ((unsigned int *) BADADDR) = 0;
 		
 	print("error: p7 alive after program trap with no trap vector\n");
 	PANIC();
