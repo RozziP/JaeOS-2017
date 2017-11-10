@@ -27,27 +27,27 @@ interruptHandler()
     //Determine which line caused the interrupt
     if(cause & BIT3 !=0)
     {
-       line = DISK;
+       lineNum = DISK;
     }
 
     else if(cause & BIT4 !=0)
     {
-       line = TAPE;
+       lineNum = TAPE;
     }
 
     else if(cause & BIT5 !=0)
     {
-       line = NETWORK;
+       lineNum = NETWORK;
     }
 
     else if(cause & BIT6 !=0)
     {
-       line = PRINTER;
+       lineNum = PRINTER;
     }
 
     else if(cause & BIT7 !=0)
     {
-       line = TERMINAL;
+       lineNum = TERMINAL;
     }
     else
     {
@@ -64,7 +64,7 @@ interruptHandler()
     //THEYRE STRUCTS
     
     //signal the device's semaphore
-    int sem = sema4[/*device*/];
+    int sem = sema4[deviceNum];
     sem++;
     pcb_PTR temp = removeBlocked(sem);
     if(temp == NULL) PANIC();
@@ -77,7 +77,7 @@ interruptHandler()
 
 
 HIDDEN int getDeviceNumber(int lineNum){
-    int cause
+    int cause;
     switch(lineNum){
         case DISK:
             cause=DISKMAP;
@@ -141,6 +141,6 @@ HIDDEN int getDeviceNumber(int lineNum){
 
 
 HIDDEN int getDeviceRegister(int lineNum, int DeviceNum){
-    unsigned int registerLocation= DEVICEREGSTART+ (lineNum-NULLLINES) * DEVICEREGSIZE + DEVICEREGSIZE * DeviceNum;
+    unsigned int registerLocation = DEVICEREGSTART+(lineNum-NULLLINES)*DEVICEREGSIZE+DEVICEREGSIZE*DeviceNum;
 }
 

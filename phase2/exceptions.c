@@ -7,6 +7,7 @@ exceptions.c
 #include "../e/pcb.e"
 #include "../e/initial.e"
 #include "../e/scheduler.e"
+#include "../h/globals.h"
 #include "../h/const.h"
 #include "../h/types.h"
 
@@ -118,7 +119,7 @@ HIDDEN void sys1(state_t* callingProc){
 HIDDEN void sys2(){
     if(emptyChild(currentProc)){
         //has no children
-        outChild(currrentProc);
+        outChild(currentProc);
         freePcb(currentProc);
         --procCount;
     }
@@ -179,17 +180,17 @@ HIDDEN void sys5(state_t* callingProc)
             {
                 sys2(); //already called this once
             }
-            currentProc -> sysCallNew=(state_t*)callingProc->a4;
-            currentProc -> sysCallOld=(state_t*)callingProc->a3;
+            currentProc->sysCallNew=(state_t*)callingProc->a4;
+            currentProc->sysCallOld=(state_t*)callingProc->a3;
             break;
 
         case PRGRMTRAP: 
-            if(currentProc -> prgrmTrapNew != NULL)
+            if(currentProc->prgrmTrapNew != NULL)
             {
                 sys2(); //already called this once
             }
-            currentProc -> prgrmTrapNew = (state_t*)callingProc->a4;
-            currentProc -> prgrmTrapOld = (state_t*)callingProc->a3;
+            currentProc->prgrmTrapNew = (state_t*)callingProc->a4;
+            currentProc->prgrmTrapOld = (state_t*)callingProc->a3;
             break;
 
         case SYSTRAP: 
@@ -197,8 +198,8 @@ HIDDEN void sys5(state_t* callingProc)
             {
                 sys2(); //already called this once
             }
-            currentProc -> tlbNew=(state_t*) callingProc -> a4;
-            currentProc -> tlbOld=(state_t*) callingProc -> a3;
+            currentProc->tlbNew=(state_t*) callingProc -> a4;
+            currentProc->tlbOld=(state_t*) callingProc -> a3;
             break;
     }
     LDST(callingProc);
@@ -226,7 +227,7 @@ HIDDEN void sys8(state_t* callingProc){
     deviceNumber = callingProc->a3;
     read = callingProc->a4;
 
-    if(lineNumber < DISK || lineNumber > UMMM) //wtf patrick
+    if(lineNumber < DISK || lineNumber > NULLLINES)
     {
         //Invalid request
         sys2(); 
@@ -243,7 +244,7 @@ HIDDEN void sys8(state_t* callingProc){
 
     if (*sem < 0){
         insertBlocked(sem, currentProc);
-        softBlockCount++;
+        softBlockCnt++;
         scheduler();
     }
 
@@ -275,15 +276,18 @@ HIDDEN void killAllChildren(pcb_PTR top)
    //remove the node fromm any semaphores
    if(top->p_semAdd != NULL)
    {
-        int sem = top->p_semAdd;
+        int* sem = top->p_semAdd;
         outBlocked(top);
 
         //is it on a device semaphore?
         if(sem >= &(sema4[0]) && sem <= &(sema4[DEVICES-1]))
         {
-            softBlockCount--; //not anymore
+            softBlockCnt--; //not anymore
         }
-        sem++;
+        else
+        {
+        *sem++;
+        }
    }
 
    //RIP
@@ -296,21 +300,21 @@ HIDDEN void killAllChildren(pcb_PTR top)
 HIDDEN void passUpOrDie(state_t* callingProc,int cause){
     switch(cause){
         case SYSTRAP:  
-            if(currentProc-> SYS_NEW != NULL){
+            if(currentProc->sysCallNew != NULL){
                 //sys trap called
-                LDST(currentPRoc -> sysCallNew);
+                LDST(currentProc -> sysCallNew);
             }
         break;
         case PRGRMTRAP:  
-            if(currentProc->PRGRM_NEW != NULL){
+            if(currentProc->prgrmTrapNew != NULL){
                 //sys trap called
-                LDST(currentPRoc -> programTrapNew);
+                LDST(currentProc -> prgrmTrapNew);
             }
         break;
         case TLBTRAP:  
-            if(currentProc -> TLB_NEW != NULL){
+            if(currentProc -> tlbNew != NULL){
                 //sys trap called
-                LDST(currentPRoc -> tlbNew);
+                LDST(currentProc -> tlbNew);
             }
         break;
     }

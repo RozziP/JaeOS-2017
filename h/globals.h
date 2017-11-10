@@ -1,7 +1,6 @@
 #ifndef GLOBALS
 #define GLOBALS
 
-#include "../e/asl.e"
 #include "../e/pcb.e"
 #include "const.h"
 #include "types.h"
