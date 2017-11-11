@@ -60,6 +60,7 @@ main()
 
     //off to see the wizard
     scheduler();
+
 }
 
 void copyState(state_t* src, state_t* dest)
