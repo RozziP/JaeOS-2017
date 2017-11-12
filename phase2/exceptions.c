@@ -207,14 +207,50 @@ HIDDEN void sys5(state_t* callingProc)
 
 
 
-HIDDEN void sys6(state_t* callingProc){
-    //do later b/c time stuff
+HIDDEN void sys6(state_t* callingProc)
+{
+    //Store ending time of day
+    STCK(endTOD);
+    
+    //Store elapsed time
+    elapsedTime = endTOD - startTOD;
+    currentProc->p_time = currentProc->p_time + elapsedTime;
+    remainingTime = remainingTime - elapsedTime;
+    
+    /*Copy current process time into return register*/		
+    currentProc->p_s.a1 = currentProc->p_time;
+    
+    /*Store starting TOD*/
+    STCK(startTOD);
+    
+    /*Return to previous process*/
+    LDST((state_t*)SYS_OLD);
 }
 
 
 
-HIDDEN void sys7(state_t* callingProc){
-    //do later b/c time stuff
+HIDDEN void sys7(state_t* callingProc)
+{
+    sema4[DEVICES] = sema4[DEVICES] - 1;
+    if(sema4[DEVICES] < 0)
+    {                      
+        //Store ending time of day
+        STCK(endTOD);
+        
+        //Store elapsed time
+        elapsedTime = endTOD - startTOD;
+        currentProc->p_time = currentProc->p_time+elapsedTime;
+        remainingTime = remainingTime-elapsedTime;
+        
+        //Block the process
+        insertBlocked(&(sema4[DEVICES]),currentProc);
+        currentProc = NULL;
+        softBlockCnt++;
+        
+        scheduler();
+    }
+    //Shouldn't get here			
+    PANIC();
 }
 
 

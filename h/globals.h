@@ -11,4 +11,10 @@ extern int sema4[DEVICES];
 extern pcb_PTR currentProc;
 extern pcb_PTR readyQueue;
 
+//time things
+int startTOD;
+int endTOD;
+int elapsedTime;
+int remainingTime;
+
 #endif
