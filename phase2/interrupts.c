@@ -16,7 +16,7 @@ HIDDEN int getDeviceRegister(int lineNum, int DeviceNum);
 
 
 
-interruptHandler()
+void interruptHandler()
 {
     //int cause = (state_t*)INT_OLD->CP15_Cause;
     unsigned int cause = getCause();

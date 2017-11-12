@@ -1,0 +1,5 @@
+/*
+interrupts.e
+*/
+
+void interruptHandler();

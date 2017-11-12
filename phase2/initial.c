@@ -9,15 +9,19 @@
   Authors: Peter Rozzi and Patrick Gemperline
   Date: 10-24-17
 \*==========================================================================*/
+
 #include "../e/asl.e"
 #include "../e/pcb.e"
+#include "../e/scheduler.e"
+#include "../e/exceptions.e"
 #include "../e/initial.e"
+#include "../h/globals.h"
 #include "../h/const.h"
 #include "../h/types.h"
 
-void initArea(state_t* newArea);
+HIDDEN void initArea(state_t* newArea);
 
-main()
+void main()
 {
     initASL();
     initPcb();
@@ -52,10 +56,10 @@ main()
 
     //Initialize the starting process
     pcb_PTR starter = allocPcb();
-    starter->p_s->sp   = (RAMTOP - FRAMESIZE); 
-    starter->p_s->pc   = (unsigned int)test();   //start by running test() in p2test.c
-    starter->p_s->cpsr = ALLOFF | SYSMODE;       //Interrupts off, kernel mode
-    starter->p_s->CP15_Control = ALLOFF;         //VM off
+    starter->p_s.sp   = (RAMTOP - FRAMESIZE); 
+    starter->p_s.pc   = (unsigned int)test();  //start by running test() in p2test.c
+    starter->p_s.cpsr = ALLOFF | SYSMODE;       //Interrupts off, kernel mode
+    starter->p_s.CP15_Control = ALLOFF;         //VM off
     insertProcQ(&readyQueue, starter);
 
     //off to see the wizard

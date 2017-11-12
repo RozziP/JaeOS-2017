@@ -40,7 +40,7 @@ void sysHandler(){
     state_t* program;
     int requestedSysCall;
     
-    state_t* callingProc = (state_t*) SYS_OLD;
+    state_t* callingProc = (state_t*) SYS_OLD; //this is a re-declaration but everything breaks if i dont do it
     requestedSysCall = callingProc->a1;
 
     //Unauthorized access, shut it down
@@ -59,11 +59,11 @@ void sysHandler(){
             sys2();
         break;
 
-        case SIGNAL:
+        case VERHOGEN:
             sys3(callingProc);
         break;
 
-        case WAIT:
+        case PASSEREN:
             sys4(callingProc);
         break;
 
@@ -125,7 +125,7 @@ HIDDEN void sys2(){
     }
     else{
         //has children.... Must Kill them all
-        KILLALLTHECHILDREN(currentProc);
+        killAllChildren(currentProc);
     }
 
     currentProc=NULL;
@@ -136,7 +136,7 @@ HIDDEN void sys2(){
 HIDDEN void sys3(state_t* callingProc){
     pcb_PTR tempProc = NULL;
     int* sem = (int*)callingProc->a2;
-    sem = *sem+1;
+    *sem = *sem+1;
 
     if(*sem <= 0){
         //a proc is waiting on the sem
@@ -157,7 +157,7 @@ HIDDEN void sys3(state_t* callingProc){
 
 HIDDEN void sys4(state_t* callingProc){
     int* sem = (int*)callingProc->a2;
-    sem = *sem-1;
+    *sem = *sem-1;
 
     if(*sem < 0){
         //something controls sem
@@ -276,7 +276,7 @@ HIDDEN void sys8(state_t* callingProc){
         index = index = (deviceNumber*8) + lineNumber;
     }
     sem = &(sema4[index]);
-    sem = *sem-1;
+    *sem = *sem-1;
 
     if (*sem < 0){
         insertBlocked(sem, currentProc);
