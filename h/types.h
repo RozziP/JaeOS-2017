@@ -28,8 +28,7 @@ typedef struct pcb_t
     /* process status information */
     state_t p_s;		//processor state
     int*	p_semAdd;   //ptr to semaphore on
-    cput_t  p_time;
-    cput_t  p_startTime;  
+    cput_t  p_time; 
 
     /* which proc is blocked */
     state_t* sysCallNew;

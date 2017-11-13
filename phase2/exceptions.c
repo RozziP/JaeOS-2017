@@ -21,8 +21,6 @@ HIDDEN void sys7(state_t* callingProc);
 HIDDEN void sys8(state_t* callingProc);
 HIDDEN void killAllChildren(pcb_PTR top);
 HIDDEN void passUpOrDie(int cause);
-HIDDEN void reloadCurrentProc();
-HIDDEN void callScheduler()
 
 void tlbHandler()
 {
@@ -37,8 +35,16 @@ void prgrmTrapHandler()
     passUpOrDie(PRGRMTRAP);
 }
 
-cput_t getCurrentTime(){
-    cput_t* currentTime = * (cput_t *) TIMEOFDAYLOW / * (cput_t *) TIMESCALE
+//loads current process 
+void reloadCurrentProc(state_t* stateToLoad){
+
+    LDST(&stateToLoad);
+
+}
+
+//call the Scheduler
+void callScheduler(){
+    scheduler();
 }
 
 
@@ -219,17 +225,18 @@ HIDDEN void sys5(state_t* callingProc)
 
 HIDDEN void sys6(state_t* callingProc)
 {
-    cput_t currentTimeOfDay;
     //get current time
-    currentTimeOfDay= getCurrentTime();
+    endTimeOfDay = getTODLO();
     
     //calculate and save the time that has been used
-    timeUsed = currentTimeOfDay-startTimeOfDay;
+    timeUsed = endTimeOfDay - startTimeOfDay;
 
-    currentProc->p_time = currentProc->p_time + timeUsed;
+    currentProc -> p_time = currentProc -> p_time + timeUsed;
     
     //return resulting process time		
-    currentProc->p_s.a1 = currentProc->p_time;
+    currentProc -> p_s. a1 = currentProc -> p_time;
+
+    startTimeofDay=getTODLO();
     
     /*Return to previous process*/
     reloadCurrentProc((state_t*)SYS_OLD);
@@ -243,12 +250,12 @@ HIDDEN void sys7(state_t* callingProc)
     if(sema4[DEVICES] < 0)
     {                      
         //Store ending time of day
-        STCK(endTimeOfDay);
+        endTimeOfDay=getTODLO();
         
         //Store elapsed time
-        elapsedTime = endTimeOfDay - startTimeOfDay;
-        currentProc->p_time = currentProc->p_time+elapsedTime;
-        remainingTime = remainingTime-elapsedTime;
+        timeUsed = endTimeOfDay - startTimeOfDay;
+        currentProc -> p_time = currentProc -> p_time + timeUsed;
+        timeLeft = timeLeft - timeUsed;
         
         //Block the process
         insertBlocked(&(sema4[DEVICES]),currentProc);
@@ -338,9 +345,6 @@ HIDDEN void killAllChildren(pcb_PTR top)
 
 HIDDEN void passUpOrDie(int cause){
 
-
-    //I think that in the if statements it should be sysCallOld
-    //I changed them but I'm putting this here so we know I did that
     switch(cause){
         case SYSTRAP:  
             if(currentProc->sysCallOld != NULL){
@@ -367,21 +371,8 @@ HIDDEN void passUpOrDie(int cause){
     }
     
     killAllChildren(currentProc);
-    //sys2();
-    // Think we need to call killAllChildren Directly from here instead 
-    //of making a sys call inside a sys call
 }
 
 
-//loads current process 
-void reloadCurrentProc(state_t* stateToLoad){
 
-    LDST(&stateToLoad);
-
-}
-
-//call the Scheduler
-void callScheduler(){
-    scheduler();
-}
 

@@ -45,7 +45,12 @@ scheduler()
         currentProc = removeProcQ(&readyQueue);
         //get the current time of day and do something with it
         setTimer(QUANTUM);
-        LDST(&currentProc->p_s);
+        reloadCurrentProc(&currentProc->p_s);
+
+        startTimeOfDay = getTODLO();
+        endTimeOfDay = 0;
+        timeUsed = 0;
+        timeLeft=QUANTUM;
     }
     
         
