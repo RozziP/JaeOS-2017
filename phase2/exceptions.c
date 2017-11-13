@@ -20,31 +20,39 @@ HIDDEN void sys6(state_t* callingProc);
 HIDDEN void sys7(state_t* callingProc);
 HIDDEN void sys8(state_t* callingProc);
 HIDDEN void killAllChildren(pcb_PTR top);
-HIDDEN void passUpOrDie(state_t* callingProc, int cause);
+HIDDEN void passUpOrDie(int cause);
+HIDDEN void reloadCurrentProc();
+HIDDEN void callScheduler()
 
 void tlbHandler()
 {
-    state_t* caller = TLB_OLD;
-    passUpOrDie(caller, TLBTRAP);
+    state_t* callingProc = TLB_OLD;
+    passUpOrDie(TLBTRAP);
+    
 }
 
 void prgrmTrapHandler()
 {
-    state_t* caller = PRGRM_OLD;
-    passUpOrDie(caller, PRGRMTRAP);
+    state_t* callingProc = PRGRM_OLD;
+    passUpOrDie(PRGRMTRAP);
+}
+
+cput_t getCurrentTime(){
+    cput_t* currentTime = * (cput_t *) TIMEOFDAYLOW / * (cput_t *) TIMESCALE
 }
 
 
 void sysHandler(){
     state_t* callingProc;
     state_t* program;
-    int requestedSysCall;
+    int requestedSysCall; 
     
     state_t* callingProc = (state_t*) SYS_OLD; //this is a re-declaration but everything breaks if i dont do it
     requestedSysCall = callingProc->a1;
 
+
     //Unauthorized access, shut it down
-    if((requestedSysCall > 0) && (requestedSysCall < 9) && (callingProc->cpsr = USRMODE))
+    if((requestedSysCall > 0) && (requestedSysCall < 9) && (callingProc->cpsr = USRMODE)
     {
         prgramTrapHandler();
     }
@@ -94,29 +102,30 @@ void sysHandler(){
 }
 
 HIDDEN void sys1(state_t* callingProc){
-    pcb_PTR temp = allocPcb();
+    pcb_PTR newPCB = allocPcb();
     
-    if(temp == NULL){
+    if(newPCB == NULL){
         //no free pcbs
         callingProc->a1 = FAILURE;
-        LDST(callingProc);
+        reloadCurrentProc(callingProc);
     }
     ++procCount;
 
     //Make new process a progeny of the callingProcess
-    insertChild(currentProc, temp);
+    insertChild(currentProc, newPCB);
 
     //put it on the ready queue
-    insertProcQ(&readyQueue, temp);
-    copyState(callingProc, &(temp->p_s));
+    insertProcQ(&readyQueue, newPCB);
+    copyState(callingProc->a2, &(newPCB->p_s));
 
     callingProc->a1 = SUCCESS;
-    LDST(callingProc);
+    reloadCurrentProc(callingProc);
 }
 
 
 
 HIDDEN void sys2(){
+    //the way kill all children is written it kills the process we pass in. So we dont really need the if statement
     if(emptyChild(currentProc)){
         //has no children
         outChild(currentProc);
@@ -129,11 +138,12 @@ HIDDEN void sys2(){
     }
 
     currentProc=NULL;
-    scheduler();
+    callScheduler();
 }
 
 
 HIDDEN void sys3(state_t* callingProc){
+
     pcb_PTR tempProc = NULL;
     int* sem = (int*)callingProc->a2;
     *sem = *sem+1;
@@ -150,7 +160,7 @@ HIDDEN void sys3(state_t* callingProc){
     }
 
     //send back to caller
-    LDST(callingProc);
+    reloadCurrentProc(callingProc);
 }
 
 
@@ -162,10 +172,10 @@ HIDDEN void sys4(state_t* callingProc){
     if(*sem < 0){
         //something controls sem
         insertBlocked(sem, currentProc);
-        scheduler();
+        callScheduler();
     }
     //nothing controls sem
-    LDST(callingProc); 
+    reloadCurrentProc(callingProc); 
 
 }
 
@@ -173,12 +183,12 @@ HIDDEN void sys4(state_t* callingProc){
 
 HIDDEN void sys5(state_t* callingProc)
 {
-    switch(callingProc->a1)
+    switch(callingProc->a2)
     {
         case TLBTRAP:
             if(currentProc->tlbNew != NULL)
             {
-                sys2(); //already called this once
+                killAllChildren(); //already called this once
             }
             currentProc->sysCallNew=(state_t*)callingProc->a4;
             currentProc->sysCallOld=(state_t*)callingProc->a3;
@@ -187,7 +197,7 @@ HIDDEN void sys5(state_t* callingProc)
         case PRGRMTRAP: 
             if(currentProc->prgrmTrapNew != NULL)
             {
-                sys2(); //already called this once
+                killAllChildren(); //already called this once
             }
             currentProc->prgrmTrapNew = (state_t*)callingProc->a4;
             currentProc->prgrmTrapOld = (state_t*)callingProc->a3;
@@ -196,35 +206,36 @@ HIDDEN void sys5(state_t* callingProc)
         case SYSTRAP: 
             if(currentProc-> sysCallNew != NULL)
             {
-                sys2(); //already called this once
+                killAllChildren(); //already called this once
             }
             currentProc->tlbNew=(state_t*) callingProc -> a4;
             currentProc->tlbOld=(state_t*) callingProc -> a3;
             break;
     }
-    LDST(callingProc);
+    reloadCurrentProc(callingProc);
 }
 
 
 
 HIDDEN void sys6(state_t* callingProc)
 {
-    //Store ending time of day
-    STCK(endTOD);
+    cpu_t currentTime;
+
+    //get current time
+     currentTime= getCurrentTime();
     
-    //Store elapsed time
-    elapsedTime = endTOD - startTOD;
-    currentProc->p_time = currentProc->p_time + elapsedTime;
-    remainingTime = remainingTime - elapsedTime;
+    //calculate and save the time that has been used
+    timeUsed = currentTime - currentProc -> startTime;
+
+    currentProc->p_time = currentProc->p_time + timeUsed;
+
+    currentProc -> startTime = currentTime;
     
-    /*Copy current process time into return register*/		
+    //return resulting process time		
     currentProc->p_s.a1 = currentProc->p_time;
     
-    /*Store starting TOD*/
-    STCK(startTOD);
-    
     /*Return to previous process*/
-    LDST((state_t*)SYS_OLD);
+    reloadCurrentProc((state_t*)SYS_OLD);
 }
 
 
@@ -235,10 +246,10 @@ HIDDEN void sys7(state_t* callingProc)
     if(sema4[DEVICES] < 0)
     {                      
         //Store ending time of day
-        STCK(endTOD);
+        STCK(endTimeOfDay);
         
         //Store elapsed time
-        elapsedTime = endTOD - startTOD;
+        elapsedTime = endTimeOfDay - startTimeOfDay;
         currentProc->p_time = currentProc->p_time+elapsedTime;
         remainingTime = remainingTime-elapsedTime;
         
@@ -247,7 +258,7 @@ HIDDEN void sys7(state_t* callingProc)
         currentProc = NULL;
         softBlockCnt++;
         
-        scheduler();
+        callScheduler();
     }
     //Shouldn't get here			
     PANIC();
@@ -281,10 +292,10 @@ HIDDEN void sys8(state_t* callingProc){
     if (*sem < 0){
         insertBlocked(sem, currentProc);
         softBlockCnt++;
-        scheduler();
+        callScheduler();
     }
 
-    LDST(callingProc);
+    reloadCurrentProc(callingProc);
 }
 
 
@@ -292,67 +303,88 @@ HIDDEN void sys8(state_t* callingProc){
 
 HIDDEN void killAllChildren(pcb_PTR top)
 {
-   while(!emptyChild(top))
-   {
+   while(!emptyChild(top)){
        //drink the punch
        killAllChildren(removeChild(top));
    }
 
    //is our node the current process?
-   if(top == currentProc)
-   {
+   if(top == currentProc){
         outChild(currentProc); //not anymore
    }
    //if not, then it's on the readyqueue
-   else
-   {
+   else{
         outProcQ(&readyQueue, top);
    }
 
    //remove the node fromm any semaphores
-   if(top->p_semAdd != NULL)
-   {
+   if(top->p_semAdd != NULL){
         int* sem = top->p_semAdd;
         outBlocked(top);
 
         //is it on a device semaphore?
-        if(sem >= &(sema4[0]) && sem <= &(sema4[DEVICES-1]))
-        {
+        if(sem >= &(sema4[0]) && sem <= &(sema4[DEVICES-1])){
             softBlockCnt--; //not anymore
         }
-        else
-        {
+        else{
         *sem++;
         }
    }
 
    //RIP
-   freePcb(top);
    --procCount;
+   freePcb(top);
+   
 
 }
 
 
-HIDDEN void passUpOrDie(state_t* callingProc,int cause){
+HIDDEN void passUpOrDie(int cause){
+
+
+    //I think that in the if statements it should be sysCallOld
+    //I changed them but I'm putting this here so we know I did that
     switch(cause){
         case SYSTRAP:  
-            if(currentProc->sysCallNew != NULL){
+            if(currentProc->sysCallOld != NULL){
                 //sys trap called
-                LDST(currentProc -> sysCallNew);
+
+                copyState(SYS_OLD,currentProc->sysCallOld);
+                reloadCurrentProc(currentProc -> sysCallNew);
             }
         break;
         case PRGRMTRAP:  
-            if(currentProc->prgrmTrapNew != NULL){
-                //sys trap called
-                LDST(currentProc -> prgrmTrapNew);
+            if(currentProc->prgrmTrapOld != NULL){
+                //programTrap called
+                copyState(PRGRM_OLD,currentProc->prgrmTrapOld)
+                reloadCurrentProc(currentProc -> prgrmTrapNew);
             }
         break;
         case TLBTRAP:  
-            if(currentProc -> tlbNew != NULL){
-                //sys trap called
-                LDST(currentProc -> tlbNew);
+            if(currentProc -> tlbOld != NULL){
+                //tlb  Trap called
+                copyState(TLB_OLD,currentProc->tlbOld)
+                reloadCurrentProc(currentProc -> tlbNew);
             }
         break;
     }
-    sys2();
+    
+    killAllChildren(currentProc);
+    //sys2();
+    // Think we need to call killAllChildren Directly from here instead 
+    //of making a sys call inside a sys call
 }
+
+
+//loads current process 
+void reloadCurrentProc(state_t* stateToLoad){
+
+    LDST(&stateToLoad);
+
+}
+
+//call the Scheduler
+void callScheduler(){
+    scheduler();
+}
+

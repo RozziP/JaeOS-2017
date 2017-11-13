@@ -17,16 +17,19 @@ typedef struct pcb_t
         *p_next,		// ptr to next entry 
         *p_prev;        // ptr to previous entry 
     struct pcb_t
+
     /* process tree fields */ 
         *p_prnt,        // ptr to parent  
         *p_child,       // ptr to 1st child 
         *p_prevSib,     // ptr to previous sibling		
         *p_nextSib;	    // ptr to next sibling
 
+
     /* process status information */
     state_t p_s;		//processor state
     int*	p_semAdd;   //ptr to semaphore on
-    int*    p_time;
+    cput_t  p_time;
+    cput_t  p_startTime;  
 
     /* which proc is blocked */
     state_t* sysCallNew;
@@ -36,6 +39,7 @@ typedef struct pcb_t
     state_t* tlbNew;
     state_t* tlbOld;
     
+
 }
 pcb_t, *pcb_PTR;
 
@@ -46,5 +50,7 @@ typedef struct semd_t
     pcb_PTR s_tp;
 }
 semd_t, *semd_PTR;
+
+typedef signed int cput_t;
 
 #endif
