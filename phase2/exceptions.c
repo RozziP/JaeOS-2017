@@ -219,17 +219,14 @@ HIDDEN void sys5(state_t* callingProc)
 
 HIDDEN void sys6(state_t* callingProc)
 {
-    cpu_t currentTime;
-
+    cput_t currentTimeOfDay;
     //get current time
-     currentTime= getCurrentTime();
+    currentTimeOfDay= getCurrentTime();
     
     //calculate and save the time that has been used
-    timeUsed = currentTime - currentProc -> startTime;
+    timeUsed = currentTimeOfDay-startTimeOfDay;
 
     currentProc->p_time = currentProc->p_time + timeUsed;
-
-    currentProc -> startTime = currentTime;
     
     //return resulting process time		
     currentProc->p_s.a1 = currentProc->p_time;

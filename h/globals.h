@@ -12,9 +12,9 @@ extern pcb_PTR currentProc;
 extern pcb_PTR readyQueue;
 
 //time things
-int startTOD;
-int endTOD;
-int elapsedTime;
-int remainingTime;
+cput_t startTimeOfDay;
+cput_t endTimeOfDay;
+cput_t timeUsed;
+cput_t timeLeft;
 
 #endif
