@@ -307,7 +307,8 @@ HIDDEN void sys8(state_t* callingProc){
 
 HIDDEN void killAllChildren(pcb_PTR top)
 {
-   while(!emptyChild(top)){
+   while(!emptyChild(top))
+   {
        //drink the punch
        killAllChildren(removeChild(top));
    }
@@ -322,15 +323,18 @@ HIDDEN void killAllChildren(pcb_PTR top)
    }
 
    //remove the node fromm any semaphores
-   if(top->p_semAdd != NULL){
+   if(top->p_semAdd != NULL)
+   {
         int* sem = top->p_semAdd;
         outBlocked(top);
 
         //is it on a device semaphore?
-        if(sem >= &(sema4[0]) && sem <= &(sema4[DEVICES-1])){
+        if(sem >= &(sema4[0]) && sem <= &(sema4[DEVICES-1]))
+        {
             softBlockCnt--; //not anymore
         }
-        else{
+        else
+        {
         *sem++;
         }
    }
@@ -338,8 +342,6 @@ HIDDEN void killAllChildren(pcb_PTR top)
    //RIP
    --procCount;
    freePcb(top);
-   
-
 }
 
 
@@ -362,7 +364,8 @@ HIDDEN void passUpOrDie(int cause){
             }
         break;
         case TLBTRAP:  
-            if(currentProc -> tlbOld != NULL){
+            if(currentProc -> tlbOld != NULL)
+            {
                 //tlb  Trap called
                 copyState(TLB_OLD,currentProc->tlbOld)
                 reloadCurrentProc(currentProc -> tlbNew);

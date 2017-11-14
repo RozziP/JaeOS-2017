@@ -25,27 +25,30 @@ void interruptHandler()
     unsigned int deviceReg;
 
     //Determine which line caused the interrupt
-    if(cause & BIT3 !=0)
+    if(cause & LINE2) != 0)
+    {
+        lineNum = 
+    }
+    else if(cause & LINE3 !=0)
     {
        lineNum = DISK;
     }
-
-    else if(cause & BIT4 !=0)
+    else if(cause & LINE4 !=0)
     {
        lineNum = TAPE;
     }
 
-    else if(cause & BIT5 !=0)
+    else if(cause & LINE5 !=0)
     {
        lineNum = NETWORK;
     }
 
-    else if(cause & BIT6 !=0)
+    else if(cause & LINE6 !=0)
     {
        lineNum = PRINTER;
     }
 
-    else if(cause & BIT7 !=0)
+    else if(cause & LINE7 !=0)
     {
        lineNum = TERMINAL;
     }
@@ -104,35 +107,35 @@ HIDDEN int getDeviceNumber(int lineNum){
         break;
     }
 
-    if((cause & BIT1) != 0) {
+    if((cause & LINE1) != 0) {
         return 0;
     }
 
-    else if((cause & BIT2) != 0){
+    else if((cause & LINE2) != 0){
         return 1;
     }
 
-    else if((cause & BIT3) != 0){
+    else if((cause & LINE3) != 0){
         return 2;
     }
 
-    else if((cause & BIT4) != 0){
+    else if((cause & LINE4) != 0){
         return 3;
     }
 
-    else if((cause & BIT5) != 0){
+    else if((cause & LINE5) != 0){
         return 4;
     }
 
-    else if((cause & BIT6) != 0){
+    else if((cause & LINE6) != 0){
         return 5;
     }
 
-    else if((cause & BIT7) != 0){
+    else if((cause & LINE7) != 0){
         return 6;
     }
 
-    else if((cause & BIT8) != 0){
+    else if((cause & LINE8) != 0){
         return 7;
     }
     
