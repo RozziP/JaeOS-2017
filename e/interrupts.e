@@ -2,4 +2,4 @@
 interrupts.e
 */
 
-void interruptHandler();
+extern void interruptHandler();

@@ -4,6 +4,8 @@ interrupts.c
 */
 #include "../e/asl.e"
 #include "../e/pcb.e"
+#include "../e/initial.e"
+#include "../e/scheduler.e"
 #include "../h/globals.h"
 #include "../h/const.h"
 #include "../h/types.h"
@@ -18,33 +20,33 @@ HIDDEN int getDeviceRegister(int lineNum, int DeviceNum);
 
 void interruptHandler()
 {
-    unsigned int cause = (state_t*)INT_OLD->CP15_Cause >> 24; //shift right by 24 bits for comparison
+    unsigned int cause = ((state_t*)INT_OLD) -> CP15_Cause >> 24; //shift right by 24 bits for comparison
     int lineNum;
     int deviceNum; 
     int semIndex;
     dtpreg_t* deviceReg;
-    (state_t*)INT_OLD->s_pc = (state_t*)INT_OLD->s_pc - 4; //Go back to the executing instruction after interrupt
+    ((state_t*)INT_OLD) -> pc = ((state_t*)INT_OLD) -> pc - 4; //Go back to the executing instruction after interrupt
 
     //if there was a process running, we have to manage its timer
-    if(currentProcess != NULL){
-		cpu_t endTimeOfDay;
+    if(currentProc != NULL){
+		cput_t endTimeOfDay;
 		
-		getCurrentTime(endTimeOfDay);
+		endTimeOfDay=getTODLO();
 		
 		timeUsed = endTimeOfDay - startTimeOfDay;
 		currentProc->p_time = currentProc->p_time + timeUsed;
 		timeLeft = timeLeft - timeUsed;
 		
 		//copy the old interrupt area into the current state
-		copyState(oldInt, &(currentProcess->p_s));
+		copyState(INT_OLD, &(currentProc->p_s));
 	}
 
     //Determine which line caused the interrupt
-    if(cause & LINE2) != 0) //timer ran out
+    if((cause & LINE2) != 0) //timer ran out
     {
         //stop the current process and put it back on the readyqueue
         insertProcQ(&(readyQueue), currentProc);
-        currentProcess = NULL;
+        currentProc = NULL;
         setTimer(QUANTUM);
         scheduler();
     }
@@ -85,21 +87,21 @@ void interruptHandler()
     //THEYRE STRUCTS
     
     //signal the device's semaphore
-    sema4[semIndex]++;
+    unsigned int sem = sema4[semIndex]++;
     pcb_PTR temp = removeBlocked(sem);
     if(temp != NULL)
     {
         temp->p_semAdd = NULL;
 
-        temp->p_s->a1 = deviceReg->status;
+        (temp -> p_s).a1 = deviceReg -> status;
         softBlockCnt--;
 
         insertProcQ(&(readyQueue), temp);
     }
 
-    deviceReg->command = ACK;
-    getCurrentTime(startTimeOfDay);
-    LDST(INT_OLD);
+    deviceReg -> command = ACK;
+    startTimeOfDay=getTODLO();
+    loadState(INT_OLD);
 }
 
 
@@ -107,8 +109,8 @@ void interruptHandler()
 HIDDEN int getDeviceNumber(int lineNum)
 {
     int deviceNum = 0;
-    tempDevice = DEVICEFRONT;
-    bool found = FALSE;
+    unsigned int tempDevice = DEVICEFRONT;
+    BOOL found = FALSE;
 
     //set our bitmap to the proper line
     (unsigned int*)bitMap = (unsigned int*)(INTMAP + (lineNum * DEVICEREGSIZE));
@@ -125,7 +127,7 @@ HIDDEN int getDeviceNumber(int lineNum)
             deviceNum++;
         }
     }
-    return deviceNum();
+    return deviceNum;
 }
    
 

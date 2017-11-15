@@ -297,7 +297,7 @@ HIDDEN void killAllChildren(pcb_PTR top)
    while(!emptyChild(top))
    {
        //drink the punch
-       killAllChildren(removeChild(top));
+       killAllCsysCallHandlerhildren(removeChild(top));
    }
 
    //is our node the current process?

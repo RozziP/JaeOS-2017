@@ -9,9 +9,14 @@
 
 #include "/usr/include/uarm/uARMtypes.h"
 
+typedef signed int cput_t;
+
 /* process table entry type */
 typedef struct pcb_t
 {
+    
+
+
     struct pcb_t
     /* process queue fields */
         *p_next,		// ptr to next entry 
@@ -50,6 +55,6 @@ typedef struct semd_t
 }
 semd_t, *semd_PTR;
 
-typedef signed int cput_t;
+
 
 #endif

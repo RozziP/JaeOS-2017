@@ -93,6 +93,8 @@
 #define TIMEOFDAYLOW    0x000002E0
 #define TIMESCALE       0x000002E8
 
+#define ACK             1
+
 
 
 #endif

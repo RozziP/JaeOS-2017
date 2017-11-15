@@ -15,22 +15,25 @@
 #include "../e/scheduler.e"
 #include "../e/exceptions.e"
 #include "../e/initial.e"
+#include "../e/interrupts.e"
 #include "../h/globals.h"
 #include "../h/const.h"
 #include "../h/types.h"
+#include "/usr/include/uarm/libuarm.h"
+#include "../phase2/p2test.c"
 
 HIDDEN void initArea(state_t* newArea);
 
 void main()
 {
     initASL();
-    initPcb();
+    initPcbs();
 
     //initialize globals
     procCount    = 0;
     softBlockCnt = 0;
     currentProc  = NULL;
-    readyQueue   = mkEmptyProcQueue();
+    readyQueue   = mkEmptyProcQ();
 
     //Create the new areas
     state_t* newTLB      = TLB_NEW;
@@ -38,10 +41,10 @@ void main()
     state_t* newSys      = SYS_NEW;
     state_t* newInt      = INT_NEW;
     //Set their PCs to their respective handlers
-    newTLB->pc        = (unsigned int)tlbHandler();
-    newPgrmTrap->pc   = (unsigned int)prgrmTrapHandler();
-    newSys->pc        = (unsigned int)sysCallHandler();
-    newInt->pc        = (unsigned int)interruptHandler();
+    newTLB -> pc        = (unsigned int)tlbHandler;
+    newPgrmTrap -> pc   = (unsigned int)prgrmTrapHandler;
+    newSys -> pc        = (unsigned int)sysCallHandler;
+    newInt -> pc        = (unsigned int)interruptHandler;
     //Set their other fields to defaults
     initArea(newTLB);
     initArea(newPgrmTrap);
@@ -57,7 +60,7 @@ void main()
     //Initialize the starting process
     pcb_PTR starter = allocPcb();
     starter->p_s.sp   = (RAMTOP - FRAMESIZE); 
-    starter->p_s.pc   = (unsigned int)test();  //start by running test() in p2test.c
+    starter->p_s.pc   = (unsigned int)test;  //start by running test() in p2test.c
     starter->p_s.cpsr = ALLOFF | SYSMODE;       //Interrupts off, kernel mode
     starter->p_s.CP15_Control = ALLOFF;         //VM off
     insertProcQ(&readyQueue, starter);

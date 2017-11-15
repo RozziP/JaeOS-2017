@@ -7,4 +7,4 @@ initial.e
 
 extern void main();
 extern void copyState(state_t* src, state_t* dest);
-void loadState(state_t* stateToLoad);
+extern void loadState(state_t* stateToLoad);
