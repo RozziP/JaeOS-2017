@@ -11,6 +11,7 @@
 \*==========================================================================*/
 #include "../e/asl.e"
 #include "../e/pcb.e"
+#include "../e/initial.e"
 #include "../h/globals.h"
 #include "../h/const.h"
 #include "../h/types.h"
@@ -43,11 +44,10 @@ void scheduler()
     else //there are ready processes
     {
         currentProc = removeProcQ(&readyQueue);
-        //get the current time of day and do something with it
         setTimer(QUANTUM);
         reloadCurrentProc(&currentProc->p_s);
 
-        startTimeOfDay = getTODLO();
+        getCurrentTime(startTimeOfDay);
         endTimeOfDay = 0;
         timeUsed = 0;
         timeLeft=QUANTUM;
