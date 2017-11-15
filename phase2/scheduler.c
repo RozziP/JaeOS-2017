@@ -36,7 +36,7 @@ void scheduler()
         }
         else
         {
-            setStatus(getStatus() & INTS_ON | SYSMODE);
+            setSTATUS(getStatus() & INTS_ON | SYSMODE);
             WAIT();
         }
 

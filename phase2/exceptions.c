@@ -7,9 +7,11 @@ exceptions.c
 #include "../e/pcb.e"
 #include "../e/initial.e"
 #include "../e/scheduler.e"
+#include "../e/interrupts.e"
 #include "../h/globals.h"
 #include "../h/const.h"
 #include "../h/types.h"
+#include "/usr/include/uarm/libuarm.h"
 
 HIDDEN void sys1(state_t* callingProc);
 HIDDEN void sys2();
@@ -36,7 +38,6 @@ void prgrmTrapHandler()
 }
 
 void sysCallHandler(){
-    state_t* callingProc;
     state_t* program;
     int requestedSysCall; 
     
@@ -45,9 +46,9 @@ void sysCallHandler(){
 
 
     //Unauthorized access, shut it down
-    if((requestedSysCall > 0) && (requestedSysCall < 9) && (callingProc->cpsr = USRMODE)
+    if((requestedSysCall > 0) && (requestedSysCall < 9) && (callingProc->cpsr = USRMODE))
     {
-        prgramTrapHandler();
+        prgrmTrapHandler();
     }
 
     //Direct to syscall
@@ -85,7 +86,7 @@ void sysCallHandler(){
         break;
 
         default: //everything else
-            PassUpOrDie(callingProc, SYSTRAP);
+            passUpOrDie(SYSTRAP);
         break;
     }
 
@@ -109,7 +110,7 @@ HIDDEN void sys1(state_t* callingProc){
 
     //put it on the ready queue
     insertProcQ(&readyQueue, newPCB);
-    copyState(callingProc->a2, &(newPCB->p_s));
+    copyState((state_t *) callingProc -> a2, &( newPCB -> p_s));
 
     callingProc->a1 = SUCCESS;
     loadState(callingProc);
@@ -173,7 +174,7 @@ HIDDEN void sys4(state_t* callingProc){
 }
 
 
-
+cop
 HIDDEN void sys5(state_t* callingProc)
 {
     switch(callingProc->a2)
@@ -346,7 +347,7 @@ HIDDEN void passUpOrDie(int cause){
         case PRGRMTRAP:  
             if(currentProc->prgrmTrapOld != NULL){
                 //programTrap called
-                copyState(PRGRM_OLD,currentProc->prgrmTrapOld)
+                copyState(PRGRM_OLD,currentProc->prgrmTrapOld);
                 loadState(currentProc -> prgrmTrapNew);
             }
         break;

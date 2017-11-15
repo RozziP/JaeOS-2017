@@ -47,7 +47,7 @@ void interruptHandler()
         //stop the current process and put it back on the readyqueue
         insertProcQ(&(readyQueue), currentProc);
         currentProc = NULL;
-        setTimer(QUANTUM);
+        setTIMER(QUANTUM);
         scheduler();
     }
     else if(cause & LINE3 !=0)
@@ -68,7 +68,7 @@ void interruptHandler()
     {
        lineNum = PRINTER;
     }
-
+    
     else if(cause & LINE7 !=0)
     {
        lineNum = TERMINAL;
@@ -87,8 +87,8 @@ void interruptHandler()
     //THEYRE STRUCTS
     
     //signal the device's semaphore
-    unsigned int sem = sema4[semIndex]++;
-    pcb_PTR temp = removeBlocked(sem);
+    int sem = sema4[semIndex]++;
+    pcb_PTR temp = removeBlocked(&sem);
     if(temp != NULL)
     {
         temp->p_semAdd = NULL;
@@ -101,7 +101,7 @@ void interruptHandler()
 
     deviceReg -> command = ACK;
     startTimeOfDay=getTODLO();
-    loadState(INT_OLD);
+    loadState((state_t *) INT_OLD);
 }
 
 
@@ -113,11 +113,11 @@ HIDDEN int getDeviceNumber(int lineNum)
     BOOL found = FALSE;
 
     //set our bitmap to the proper line
-    (unsigned int*)bitMap = (unsigned int*)(INTMAP + (lineNum * DEVICEREGSIZE));
+    unsigned int * bitMap = (unsigned int*)(INTMAP + (lineNum * DEVICEREGSIZE));
 
     while(!found)
     {
-        if(tempDevice & *bitMap) != 0)
+        if((tempDevice & *bitMap) != 0)
         {
             found = TRUE;
         }
