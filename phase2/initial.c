@@ -20,7 +20,7 @@
 #include "../h/const.h"
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
-#include "../phase2/p2test.c"
+#include "../e/p2test.e"
 
 HIDDEN void initArea(state_t* newArea);
 
