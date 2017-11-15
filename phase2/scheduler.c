@@ -17,7 +17,7 @@
 #include "/usr/include/uarm/libuarm.h"
 
 
-scheduler()
+void scheduler()
 {   
     //If there was a process running, do something with its time slice
     //we havent decided what time stuff to do yet

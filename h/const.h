@@ -73,23 +73,22 @@
 #define PRINTER 		 6
 #define TERMINAL		 7
 
-#define BIT1             0x00000001
-#define BIT2             0x00000002
-#define BIT3			 0x00000004
-#define BIT4			 0x00000008
-#define BIT5			 0x00000010
-#define BIT6			 0x00000020
-#define BIT7   	    	 0x00000040
-#define BIT8   	    	 0x00000080
+#define LINE1             0x00000001
+#define LINE2             0x00000002
+#define LINE3			 0x00000004
+#define LINE4			 0x00000008
+#define LINE5			 0x00000010
+#define LINE6			 0x00000020
+#define LINE7   	    	 0x00000040
+#define LINE8   	    	 0x00000080
 
-#define DISKMAP          0x00006FE0
-#define TAPEMAP          0x00006FE4
-#define NETWORKMAP       0x00006FE8
-#define PRINTMAP         0x00006FEC
-#define TERMINALMAP      0x00006FF0
+#define DEVICEFRONT        0x00000001   
+
+#define INTMAP           0x00006FE0
 
 #define DEVICEREGSTART   0X00000040
 #define DEVICEREGSIZE    4
+#define DEVICEPERLINE    8
 
 #define TIMEOFDAYLOW    0x000002E0
 #define TIMESCALE       0x000002E8

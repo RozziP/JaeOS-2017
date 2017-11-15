@@ -18,16 +18,35 @@ HIDDEN int getDeviceRegister(int lineNum, int DeviceNum);
 
 void interruptHandler()
 {
-    //int cause = (state_t*)INT_OLD->CP15_Cause;
-    unsigned int cause = getCause();
+    unsigned int cause = (state_t*)INT_OLD->CP15_Cause >> 24; //shift right by 24 bits for comparison
     int lineNum;
-    int deviceNum;
-    unsigned int deviceReg;
+    int deviceNum; 
+    int semIndex;
+    dtpreg_t* deviceReg;
+    (state_t*)INT_OLD->s_pc = (state_t*)INT_OLD->s_pc - 4; //Go back to the executing instruction after interrupt
+
+    //if there was a process running, we have to manage its timer
+    if(currentProcess != NULL){
+		cpu_t endTimeOfDay;
+		
+		getCurrentTime(endTimeOfDay);
+		
+		timeUsed = endTimeOfDay - startTimeOfDay;
+		currentProc->p_time = currentProc->p_time + timeUsed;
+		timeLeft = timeLeft - timeUsed;
+		
+		//copy the old interrupt area into the current state
+		copyState(oldInt, &(currentProcess->p_s));
+	}
 
     //Determine which line caused the interrupt
-    if(cause & LINE2) != 0)
+    if(cause & LINE2) != 0) //timer ran out
     {
-        lineNum = 
+        //stop the current process and put it back on the readyqueue
+        insertProcQ(&(readyQueue), currentProc);
+        currentProcess = NULL;
+        setTimer(QUANTUM);
+        scheduler();
     }
     else if(cause & LINE3 !=0)
     {
@@ -57,90 +76,58 @@ void interruptHandler()
         PANIC();
     }
 
-    //TODO find which device on the line caused the interrupt
     deviceNum = getDeviceNumber(lineNum);
-    //TODO find the location of that device's registers
-    deviceReg=getDeviceRegister(lineNum,deviceNum);
+    semIndex = (lineNum * DEVICEPERLINE) + deviceNum;
+    deviceReg = getDeviceRegister(lineNum, deviceNum);
 
     //copy status register and put in r0???
     //set command field to ACK???
     //THEYRE STRUCTS
     
     //signal the device's semaphore
-    int sem = sema4[deviceNum];
-    sem++;
+    sema4[semIndex]++;
     pcb_PTR temp = removeBlocked(sem);
-    if(temp == NULL) PANIC();
-    insertProcQ(&readyQueue, temp);
-    softBlockCnt--;
+    if(temp != NULL)
+    {
+        temp->p_semAdd = NULL;
 
+        temp->p_s->a1 = deviceReg->status;
+        softBlockCnt--;
+
+        insertProcQ(&(readyQueue), temp);
+    }
+
+    deviceReg->command = ACK;
+    getCurrentTime(startTimeOfDay);
     LDST(INT_OLD);
 }
 
 
 
-HIDDEN int getDeviceNumber(int lineNum){
-    int cause;
-    switch(lineNum){
-        case DISK:
-            cause=DISKMAP;
-        break;
+HIDDEN int getDeviceNumber(int lineNum)
+{
+    int deviceNum = 0;
+    tempDevice = DEVICEFRONT;
+    bool found = FALSE;
 
-        case TAPE:
-            cause=TAPEMAP;
-        break;
+    //set our bitmap to the proper line
+    (unsigned int*)bitMap = (unsigned int*)(INTMAP + (lineNum * DEVICEREGSIZE));
 
-        case NETWORK:
-            cause=NETWORKMAP;
-        break;
-
-        case PRINTER:
-            cause=PRINTMAP;
-        break;
-
-        case TERMINAL:
-            cause=TERMINALMAP;
-        break;
-
-        default: //everything else
-            PANIC();
-        break;
+    while(!found)
+    {
+        if(tempDevice & *bitMap) != 0)
+        {
+            found = TRUE;
+        }
+        else
+        {
+            tempDevice = tempDevice << 1; //shift to the next device
+            deviceNum++;
+        }
     }
-
-    if((cause & LINE1) != 0) {
-        return 0;
-    }
-
-    else if((cause & LINE2) != 0){
-        return 1;
-    }
-
-    else if((cause & LINE3) != 0){
-        return 2;
-    }
-
-    else if((cause & LINE4) != 0){
-        return 3;
-    }
-
-    else if((cause & LINE5) != 0){
-        return 4;
-    }
-
-    else if((cause & LINE6) != 0){
-        return 5;
-    }
-
-    else if((cause & LINE7) != 0){
-        return 6;
-    }
-
-    else if((cause & LINE8) != 0){
-        return 7;
-    }
-    
-    PANIC();
+    return deviceNum();
 }
+   
 
 
 HIDDEN int getDeviceRegister(int lineNum, int DeviceNum){

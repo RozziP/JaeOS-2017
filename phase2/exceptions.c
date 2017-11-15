@@ -35,20 +35,7 @@ void prgrmTrapHandler()
     passUpOrDie(PRGRMTRAP);
 }
 
-//loads current process 
-void reloadCurrentProc(state_t* stateToLoad){
-
-    LDST(&stateToLoad);
-
-}
-
-//call the Scheduler
-void callScheduler(){
-    scheduler();
-}
-
-
-void sysHandler(){
+void sysCallHandler(){
     state_t* callingProc;
     state_t* program;
     int requestedSysCall; 
@@ -113,7 +100,7 @@ HIDDEN void sys1(state_t* callingProc){
     if(newPCB == NULL){
         //no free pcbs
         callingProc->a1 = FAILURE;
-        reloadCurrentProc(callingProc);
+        loadState(callingProc);
     }
     ++procCount;
 
@@ -125,7 +112,7 @@ HIDDEN void sys1(state_t* callingProc){
     copyState(callingProc->a2, &(newPCB->p_s));
 
     callingProc->a1 = SUCCESS;
-    reloadCurrentProc(callingProc);
+    loadState(callingProc);
 }
 
 
@@ -144,7 +131,7 @@ HIDDEN void sys2(){
     }
 
     currentProc=NULL;
-    callScheduler();
+    scheduler();
 }
 
 
@@ -166,7 +153,7 @@ HIDDEN void sys3(state_t* callingProc){
     }
 
     //send back to caller
-    reloadCurrentProc(callingProc);
+    loadState(callingProc);
 }
 
 
@@ -178,10 +165,10 @@ HIDDEN void sys4(state_t* callingProc){
     if(*sem < 0){
         //something controls sem
         insertBlocked(sem, currentProc);
-        callScheduler();
+        scheduler();
     }
     //nothing controls sem
-    reloadCurrentProc(callingProc); 
+    loadState(callingProc); 
 
 }
 
@@ -218,7 +205,7 @@ HIDDEN void sys5(state_t* callingProc)
             currentProc->tlbOld=(state_t*) callingProc -> a3;
             break;
     }
-    reloadCurrentProc(callingProc);
+    loadState(callingProc);
 }
 
 
@@ -239,7 +226,7 @@ HIDDEN void sys6(state_t* callingProc)
     startTimeofDay=getTODLO();
     
     /*Return to previous process*/
-    reloadCurrentProc((state_t*)SYS_OLD);
+    loadState((state_t*)SYS_OLD);
 }
 
 
@@ -262,7 +249,7 @@ HIDDEN void sys7(state_t* callingProc)
         currentProc = NULL;
         softBlockCnt++;
         
-        callScheduler();
+        scheduler();
     }
     //Shouldn't get here			
     PANIC();
@@ -296,10 +283,10 @@ HIDDEN void sys8(state_t* callingProc){
     if (*sem < 0){
         insertBlocked(sem, currentProc);
         softBlockCnt++;
-        callScheduler();
+        scheduler();
     }
 
-    reloadCurrentProc(callingProc);
+    loadState(callingProc);
 }
 
 
@@ -353,14 +340,14 @@ HIDDEN void passUpOrDie(int cause){
                 //sys trap called
 
                 copyState(SYS_OLD,currentProc->sysCallOld);
-                reloadCurrentProc(currentProc -> sysCallNew);
+                loadState(currentProc -> sysCallNew);
             }
         break;
         case PRGRMTRAP:  
             if(currentProc->prgrmTrapOld != NULL){
                 //programTrap called
                 copyState(PRGRM_OLD,currentProc->prgrmTrapOld)
-                reloadCurrentProc(currentProc -> prgrmTrapNew);
+                loadState(currentProc -> prgrmTrapNew);
             }
         break;
         case TLBTRAP:  
@@ -368,7 +355,7 @@ HIDDEN void passUpOrDie(int cause){
             {
                 //tlb  Trap called
                 copyState(TLB_OLD,currentProc->tlbOld)
-                reloadCurrentProc(currentProc -> tlbNew);
+                loadState(currentProc -> tlbNew);
             }
         break;
     }

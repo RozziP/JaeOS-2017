@@ -38,10 +38,10 @@ void main()
     state_t* newSys      = SYS_NEW;
     state_t* newInt      = INT_NEW;
     //Set their PCs to their respective handlers
-    newTLB->pc        = (unsigned int)TLBHandler();
-    newPgrmTrap->pc   = (unsigned int)PrgrmTrapHandler();
-    newSys->pc        = (unsigned int)SysCallHandler();
-    newInt->pc        = (unsigned int)InterruptHandler();
+    newTLB->pc        = (unsigned int)tlbHandler();
+    newPgrmTrap->pc   = (unsigned int)prgrmTrapHandler();
+    newSys->pc        = (unsigned int)sysCallHandler();
+    newInt->pc        = (unsigned int)interruptHandler();
     //Set their other fields to defaults
     initArea(newTLB);
     initArea(newPgrmTrap);
@@ -65,6 +65,12 @@ void main()
     //off to see the wizard
     scheduler();
 
+}
+
+//loads given state
+void loadState(state_t* stateToLoad)
+{
+    LDST(&stateToLoad);
 }
 
 void copyState(state_t* src, state_t* dest)
