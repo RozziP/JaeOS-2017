@@ -36,7 +36,7 @@ void scheduler()
         }
         else
         {
-            setSTATUS(getStatus() & INTS_ON | SYSMODE);
+            setSTATUS(getSTATUS() & INTS_ON | SYSMODE);
             WAIT();
         }
 
@@ -44,10 +44,10 @@ void scheduler()
     else //there are ready processes
     {
         currentProc = removeProcQ(&readyQueue);
-        setTimer(QUANTUM);
-        reloadCurrentProc(&currentProc->p_s);
+        setTIMER(QUANTUM);
+        loadState(&currentProc->p_s);
 
-        getCurrentTime(startTimeOfDay);
+        startTimeOfDay = getTODLO();
         endTimeOfDay = 0;
         timeUsed = 0;
         timeLeft=QUANTUM;

@@ -26,14 +26,14 @@ HIDDEN void passUpOrDie(int cause);
 
 void tlbHandler()
 {
-    state_t* callingProc = TLB_OLD;
+    state_t* callingProc = (state_t*) TLB_OLD;
     passUpOrDie(TLBTRAP);
     
 }
 
 void prgrmTrapHandler()
 {
-    state_t* callingProc = PRGRM_OLD;
+    state_t* callingProc = (state_t*) PRGRM_OLD;
     passUpOrDie(PRGRMTRAP);
 }
 
@@ -173,8 +173,6 @@ HIDDEN void sys4(state_t* callingProc){
 
 }
 
-
-cop
 HIDDEN void sys5(state_t* callingProc)
 {
     switch(callingProc->a2)
@@ -182,7 +180,7 @@ HIDDEN void sys5(state_t* callingProc)
         case TLBTRAP:
             if(currentProc->tlbNew != NULL)
             {
-                killAllChildren(); //already called this once
+                killAllChildren(currentProc); //already called this once
             }
             currentProc->sysCallNew=(state_t*)callingProc->a4;
             currentProc->sysCallOld=(state_t*)callingProc->a3;
@@ -191,7 +189,7 @@ HIDDEN void sys5(state_t* callingProc)
         case PRGRMTRAP: 
             if(currentProc->prgrmTrapNew != NULL)
             {
-                killAllChildren(); //already called this once
+                killAllChildren(currentProc); //already called this once
             }
             currentProc->prgrmTrapNew = (state_t*)callingProc->a4;
             currentProc->prgrmTrapOld = (state_t*)callingProc->a3;
@@ -200,7 +198,7 @@ HIDDEN void sys5(state_t* callingProc)
         case SYSTRAP: 
             if(currentProc-> sysCallNew != NULL)
             {
-                killAllChildren(); //already called this once
+                killAllChildren(currentProc); //already called this once
             }
             currentProc->tlbNew=(state_t*) callingProc -> a4;
             currentProc->tlbOld=(state_t*) callingProc -> a3;
@@ -224,7 +222,7 @@ HIDDEN void sys6(state_t* callingProc)
     //return resulting process time		
     currentProc -> p_s. a1 = currentProc -> p_time;
 
-    startTimeofDay=getTODLO();
+    startTimeOfDay=getTODLO();
     
     /*Return to previous process*/
     loadState((state_t*)SYS_OLD);
@@ -298,7 +296,7 @@ HIDDEN void killAllChildren(pcb_PTR top)
    while(!emptyChild(top))
    {
        //drink the punch
-       killAllCsysCallHandlerhildren(removeChild(top));
+       killAllChildren(removeChild(top));
    }
 
    //is our node the current process?
@@ -340,14 +338,14 @@ HIDDEN void passUpOrDie(int cause){
             if(currentProc->sysCallOld != NULL){
                 //sys trap called
 
-                copyState(SYS_OLD,currentProc->sysCallOld);
+                copyState((state_t*) SYS_OLD,currentProc->sysCallOld);
                 loadState(currentProc -> sysCallNew);
             }
         break;
         case PRGRMTRAP:  
             if(currentProc->prgrmTrapOld != NULL){
                 //programTrap called
-                copyState(PRGRM_OLD,currentProc->prgrmTrapOld);
+                copyState((state_t*) PRGRM_OLD,currentProc->prgrmTrapOld);
                 loadState(currentProc -> prgrmTrapNew);
             }
         break;
@@ -355,7 +353,7 @@ HIDDEN void passUpOrDie(int cause){
             if(currentProc -> tlbOld != NULL)
             {
                 //tlb  Trap called
-                copyState(TLB_OLD,currentProc->tlbOld)
+                copyState((state_t*) TLB_OLD,currentProc->tlbOld);
                 loadState(currentProc -> tlbNew);
             }
         break;

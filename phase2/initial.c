@@ -36,10 +36,10 @@ void main()
     readyQueue   = mkEmptyProcQ();
 
     //Create the new areas
-    state_t* newTLB      = TLB_NEW;
-    state_t* newPgrmTrap = PRGRM_NEW;
-    state_t* newSys      = SYS_NEW;
-    state_t* newInt      = INT_NEW;
+    state_t* newTLB      = (state_t *) TLB_NEW;
+    state_t* newPgrmTrap = (state_t *) PRGRM_NEW;
+    state_t* newSys      = (state_t *) SYS_NEW;
+    state_t* newInt      = (state_t *) INT_NEW;
     //Set their PCs to their respective handlers
     newTLB -> pc        = (unsigned int)tlbHandler;
     newPgrmTrap -> pc   = (unsigned int)prgrmTrapHandler;

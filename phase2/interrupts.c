@@ -38,7 +38,7 @@ void interruptHandler()
 		timeLeft = timeLeft - timeUsed;
 		
 		//copy the old interrupt area into the current state
-		copyState(INT_OLD, &(currentProc->p_s));
+		copyState((state_t *) INT_OLD, &(currentProc->p_s));
 	}
 
     //Determine which line caused the interrupt
@@ -80,7 +80,7 @@ void interruptHandler()
 
     deviceNum = getDeviceNumber(lineNum);
     semIndex = (lineNum * DEVICEPERLINE) + deviceNum;
-    deviceReg = getDeviceRegister(lineNum, deviceNum);
+    deviceReg = (dtpreg_t*) getDeviceRegister(lineNum, deviceNum);
 
     //copy status register and put in r0???
     //set command field to ACK???
