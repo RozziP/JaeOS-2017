@@ -6,7 +6,7 @@ interrupts.c
 #include "../e/pcb.e"
 #include "../e/initial.e"
 #include "../e/scheduler.e"
-#include "../h/globals.h"
+
 #include "../h/const.h"
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"

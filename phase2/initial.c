@@ -16,13 +16,23 @@
 #include "../e/exceptions.e"
 #include "../e/initial.e"
 #include "../e/interrupts.e"
-#include "../h/globals.h"
+
 #include "../h/const.h"
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
 #include "../e/p2test.e"
 
 HIDDEN void initArea(state_t* newArea);
+
+int procCount;
+int softBlockCnt;
+int sema4[DEVICES];
+pcb_PTR currentProc;
+pcb_PTR readyQueue;
+cput_t startTimeOfDay;
+cput_t endTimeOfDay;
+cput_t timeUsed;
+cput_t timeLeft;
 
 void main()
 {
