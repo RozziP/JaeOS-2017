@@ -53,9 +53,8 @@ void scheduler()
     else //there are ready processes
     {
         currentProc = removeProcQ(&readyQueue);
-        setTIMER(QUANTUM);
         lsB();
-        loadState(&currentProc -> p_s);
+        loadState(&(currentProc->p_s);
 
         startTimeOfDay = getTODLO();
         endTimeOfDay = 0;

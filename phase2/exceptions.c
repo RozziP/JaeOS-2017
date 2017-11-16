@@ -227,7 +227,7 @@ HIDDEN void sys6(state_t* callingProc)
     //return resulting process time		
     currentProc -> p_s. a1 = currentProc -> p_time;
 
-    startTimeOfDay=getTODLO();
+    startTimeOfDay = getTODLO();
     
     /*Return to previous process*/
     loadState((state_t*)SYS_OLD);

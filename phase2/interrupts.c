@@ -12,6 +12,7 @@ interrupts.c
 #include "/usr/include/uarm/libuarm.h"
 
 HIDDEN unsigned int getCause();
+HIDDEN void terminalHelper();
 HIDDEN int getLineNumber();
 HIDDEN int getDeviceNumber(int lineNum);
 HIDDEN int getDeviceRegister(int lineNum, int DeviceNum);
@@ -79,29 +80,32 @@ void interruptHandler()
     }
 
     deviceNum = getDeviceNumber(lineNum);
-    semIndex = (lineNum * DEVICEPERLINE) + deviceNum;
-    deviceReg = (dtpreg_t*) getDeviceRegister(lineNum, deviceNum);
-
-    //copy status register and put in r0???
-    //set command field to ACK???
-    //THEYRE STRUCTS
-    
-    //signal the device's semaphore
-    int sem = sema4[semIndex]++;
-    pcb_PTR temp = removeBlocked(&sem);
-    if(temp != NULL)
+    if(lineNum = TERMINAL)
     {
-        temp->p_semAdd = NULL;
-
-        (temp -> p_s).a1 = deviceReg -> status;
-        softBlockCnt--;
-
-        insertProcQ(&(readyQueue), temp);
+        terminalHelper();
     }
+    else
+    {
+        semIndex = (lineNum * DEVICEPERLINE) + deviceNum;
+        deviceReg = (dtpreg_t*)getDeviceRegister(lineNum, deviceNum);
 
-    deviceReg -> command = ACK;
-    startTimeOfDay=getTODLO();
+        //signal the device's semaphore
+        int sem = sema4[semIndex]++;
+        pcb_PTR temp = removeBlocked(&sem);
+        if(temp != NULL)
+        {
+            temp->p_semAdd = NULL;
+
+            (temp->p_s).a1 = deviceReg->status;
+            softBlockCnt--;
+
+            insertProcQ(&(readyQueue), temp);
+        }
+    }
+    deviceReg->command = ACK;
+    startTimeOfDay = getTODLO();
     loadState((state_t *) INT_OLD);
+
 }
 
 
@@ -113,7 +117,7 @@ HIDDEN int getDeviceNumber(int lineNum)
     BOOL found = FALSE;
 
     //set our bitmap to the proper line
-    unsigned int * bitMap = (unsigned int*)(INTMAP + (lineNum * DEVICEREGSIZE));
+    unsigned int* bitMap = (unsigned int*)(INTMAP + (lineNum * DEVICEREGSIZE));
 
     while(!found)
     {
@@ -129,10 +133,15 @@ HIDDEN int getDeviceNumber(int lineNum)
     }
     return deviceNum;
 }
+
+HIDDEN void terminalHelper(int deviceNum)
+{
+
+}
    
 
 
-HIDDEN int getDeviceRegister(int lineNum, int DeviceNum){
-    unsigned int registerLocation = DEVICEREGSTART+(lineNum-NULLLINES)*DEVICEREGSIZE+DEVICEREGSIZE*DeviceNum;
+HIDDEN unsigned int getDeviceRegister(int lineNum, int deviceNum){
+    unsigned int registerLocation = DEVICEREGSTART + ((lineNum-NULLLINES)* DEVICEREGSIZE) + (DEVICEREGSIZE * DeviceNum);
 }
 
