@@ -17,6 +17,13 @@
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
 
+HIDDEN void waitBreak(){
+    return;
+}
+
+HIDDEN void lsB(){
+    return;
+}
 
 void scheduler()
 {   
@@ -36,8 +43,10 @@ void scheduler()
         }
         else
         {
+            waitBreak();
             setSTATUS(getSTATUS() & INTS_ON | SYSMODE);
             WAIT();
+            waitBreak();
         }
 
     }
@@ -45,7 +54,8 @@ void scheduler()
     {
         currentProc = removeProcQ(&readyQueue);
         setTIMER(QUANTUM);
-        loadState(&currentProc->p_s);
+        lsB();
+        loadState(&currentProc -> p_s);
 
         startTimeOfDay = getTODLO();
         endTimeOfDay = 0;

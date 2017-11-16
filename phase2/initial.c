@@ -24,6 +24,10 @@
 
 HIDDEN void initArea(state_t* newArea);
 
+HIDDEN void initAreasBreak(){
+    return;
+}
+
 int procCount;
 int softBlockCnt;
 int sema4[DEVICES];
@@ -44,6 +48,8 @@ void main()
     softBlockCnt = 0;
     currentProc  = NULL;
     readyQueue   = mkEmptyProcQ();
+
+    initAreasBreak();
 
     //Create the new areas
     state_t* newTLB      = (state_t *) TLB_NEW;

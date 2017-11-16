@@ -24,6 +24,10 @@ HIDDEN void sys8(state_t* callingProc);
 HIDDEN void killAllChildren(pcb_PTR top);
 HIDDEN void passUpOrDie(int cause);
 
+HIDDEN void pthB(){
+    return;
+}
+
 void tlbHandler()
 {
     state_t* callingProc = (state_t*) TLB_OLD;
@@ -33,6 +37,7 @@ void tlbHandler()
 
 void prgrmTrapHandler()
 {
+    //pthB();
     state_t* callingProc = (state_t*) PRGRM_OLD;
     passUpOrDie(PRGRMTRAP);
 }
