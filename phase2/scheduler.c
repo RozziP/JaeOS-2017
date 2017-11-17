@@ -54,7 +54,7 @@ void scheduler()
     {
         currentProc = removeProcQ(&readyQueue);
         lsB();
-        loadState(&(currentProc->p_s);
+        loadState(&(currentProc->p_s));
 
         startTimeOfDay = getTODLO();
         endTimeOfDay = 0;

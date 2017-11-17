@@ -237,7 +237,7 @@ Make the clock wait, and also save the elapsed time
 */
 HIDDEN void sys7(state_t* callingProc)
 {
-    clockSem = DEVICES-1;
+    int clockSem = DEVICES-1;
     //decrement clock semaphore
     sema4[clockSem] = sema4[clockSem] - 1;
 
@@ -267,7 +267,7 @@ HIDDEN void sys7(state_t* callingProc)
 Tell a device to wait
 */
 HIDDEN void sys8(state_t* callingProc){
-    int lineNumber, deviceNumber, read, index;
+    int lineNumber, deviceNumber, isRead, index;
     int* sem;
 
     lineNumber = callingProc->a2;
