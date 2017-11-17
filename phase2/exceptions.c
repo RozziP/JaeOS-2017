@@ -53,7 +53,7 @@ void sysCallHandler(){
     //Unauthorized access, shut it down
     if((requestedSysCall > 0) && (requestedSysCall < 9) && (callingProc->cpsr = USRMODE))
     {
-        prgrmTrapHandler();
+        passUpOrDie(SYSTRAP);
     }
 
     //Direct to syscall
@@ -106,36 +106,28 @@ HIDDEN void sys1(state_t* callingProc){
     if(newPCB == NULL){
         //no free pcbs
         callingProc->a1 = FAILURE;
-        loadState(callingProc);
     }
+    else
+    {
+    callingProc->a1 = SUCCESS;
     ++procCount;
 
     //Make new process a progeny of the callingProcess
     insertChild(currentProc, newPCB);
-
     //put it on the ready queue
     insertProcQ(&readyQueue, newPCB);
-    copyState((state_t *) callingProc -> a2, &( newPCB -> p_s));
-
-    callingProc->a1 = SUCCESS;
-    loadState(callingProc);
+    //copy the old state into the new process
+    copyState((state_t *)callingProc->a2, &(newPCB->p_s));
+    }
+    //load the current/new process
+    loadState(&(currentProc->p_s));
 }
 
 
 
 HIDDEN void sys2(){
-    //the way kill all children is written it kills the process we pass in. So we dont really need the if statement
-    if(emptyChild(currentProc)){
-        //has no children
-        outChild(currentProc);
-        freePcb(currentProc);
-        --procCount;
-    }
-    else{
-        //has children.... Must Kill them all
-        killAllChildren(currentProc);
-    }
-
+    //end the bloodline
+    killAllChildren(currentProc);
     currentProc=NULL;
     scheduler();
 }
@@ -147,11 +139,15 @@ HIDDEN void sys3(state_t* callingProc){
     int* sem = (int*)callingProc->a2;
     *sem = *sem+1;
 
-    if(*sem <= 0){
-        //a proc is waiting on the sem
+    //if a process is waiting on this semaphore...
+    if(*sem <= 0)
+    {
+        //unblock the process
         tempProc = removeBlocked(sem);
+        tempProc->p_semAdd = NULL;
         
-        if(tempProc != NULL){
+        if(tempProc != NULL)
+        {
             //put on ready queue
             insertProcQ(&readyQueue, tempProc);
         }
@@ -168,7 +164,10 @@ HIDDEN void sys4(state_t* callingProc){
     int* sem = (int*)callingProc->a2;
     *sem = *sem-1;
 
-    if(*sem < 0){
+    if(*sem < 0)
+    {
+        //TODO keep track of elapsed time
+
         //something controls sem
         insertBlocked(sem, currentProc);
         scheduler();
@@ -221,24 +220,28 @@ HIDDEN void sys6(state_t* callingProc)
     
     //calculate and save the time that has been used
     timeUsed = endTimeOfDay - startTimeOfDay;
-
-    currentProc -> p_time = currentProc -> p_time + timeUsed;
+    currentProc->p_time = currentProc->p_time + timeUsed;
     
     //return resulting process time		
-    currentProc -> p_s. a1 = currentProc -> p_time;
+    currentProc->p_s.a1 = currentProc->p_time;
 
     startTimeOfDay = getTODLO();
     
-    /*Return to previous process*/
+    //return the to process
     loadState((state_t*)SYS_OLD);
 }
 
 
-
+/*
+Make the clock wait, and also save the elapsed time
+*/
 HIDDEN void sys7(state_t* callingProc)
 {
-    sema4[DEVICES] = sema4[DEVICES] - 1;
-    if(sema4[DEVICES] < 0)
+    clockSem = DEVICES-1;
+    //decrement clock semaphore
+    sema4[clockSem] = sema4[clockSem] - 1;
+
+    if(sema4[clockSem] < 0)
     {                      
         //Store ending time of day
         endTimeOfDay=getTODLO();
@@ -249,7 +252,7 @@ HIDDEN void sys7(state_t* callingProc)
         timeLeft = timeLeft - timeUsed;
         
         //Block the process
-        insertBlocked(&(sema4[DEVICES]),currentProc);
+        insertBlocked(&(sema4[clockSem]), currentProc);
         currentProc = NULL;
         softBlockCnt++;
         
@@ -260,14 +263,16 @@ HIDDEN void sys7(state_t* callingProc)
 }
 
 
-
+/*
+Tell a device to wait
+*/
 HIDDEN void sys8(state_t* callingProc){
     int lineNumber, deviceNumber, read, index;
     int* sem;
 
     lineNumber = callingProc->a2;
     deviceNumber = callingProc->a3;
-    read = callingProc->a4;
+    isRead = callingProc->a4;
 
     if(lineNumber < DISK || lineNumber > NULLLINES)
     {
@@ -275,10 +280,14 @@ HIDDEN void sys8(state_t* callingProc){
         sys2(); 
     }
 
-    if(lineNumber == TERMINAL && read == TRUE){
+    //If the terminal is reading...
+    if(lineNumber == TERMINAL && isRead)
+    {
         index = (deviceNumber*8) + (lineNumber + 8);
     }
-    else{
+    //else the terminal is writing
+    else
+    {
         index = index = (deviceNumber*8) + lineNumber;
     }
     sem = &(sema4[index]);
@@ -305,15 +314,17 @@ HIDDEN void killAllChildren(pcb_PTR top)
    }
 
    //is our node the current process?
-   if(top == currentProc){
+   if(top == currentProc)
+   {
         outChild(currentProc); //not anymore
    }
    //if not, then it's on the readyqueue
-   else{
+   else
+   {
         outProcQ(&readyQueue, top);
    }
 
-   //remove the node fromm any semaphores
+   //remove the node from any semaphores
    if(top->p_semAdd != NULL)
    {
         int* sem = top->p_semAdd;
@@ -324,9 +335,10 @@ HIDDEN void killAllChildren(pcb_PTR top)
         {
             softBlockCnt--; //not anymore
         }
+        //else, it's not softblocked
         else
         {
-        *sem++;
+            *sem++;
         }
    }
 
@@ -341,29 +353,29 @@ HIDDEN void passUpOrDie(int cause){
     switch(cause){
         case SYSTRAP:  
             if(currentProc->sysCallOld != NULL){
-                //sys trap called
-
-                copyState((state_t*) SYS_OLD,currentProc->sysCallOld);
-                loadState(currentProc -> sysCallNew);
+                //systrap called
+                copyState((state_t*)SYS_OLD, currentProc->sysCallOld);
+                loadState(currentProc->sysCallNew);
             }
         break;
         case PRGRMTRAP:  
             if(currentProc->prgrmTrapOld != NULL){
-                //programTrap called
+                //prgrmTrap called
                 copyState((state_t*) PRGRM_OLD,currentProc->prgrmTrapOld);
-                loadState(currentProc -> prgrmTrapNew);
+                loadState(currentProc->prgrmTrapNew);
             }
         break;
         case TLBTRAP:  
             if(currentProc -> tlbOld != NULL)
             {
-                //tlb  Trap called
+                //tlbTrap called
                 copyState((state_t*) TLB_OLD,currentProc->tlbOld);
-                loadState(currentProc -> tlbNew);
+                loadState(currentProc->tlbNew);
             }
         break;
     }
     
+    //there was no handler to pass up to... guess I'll die.
     killAllChildren(currentProc);
 }
 

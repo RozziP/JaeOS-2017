@@ -40,6 +40,8 @@ cput_t timeLeft;
 
 void main()
 {
+    state_t* newArea;
+
     initASL();
     initPcbs();
 
@@ -51,21 +53,33 @@ void main()
 
     initAreasBreak();
 
-    //Create the new areas
-    state_t* newTLB      = (state_t *) TLB_NEW;
-    state_t* newPgrmTrap = (state_t *) PRGRM_NEW;
-    state_t* newSys      = (state_t *) SYS_NEW;
-    state_t* newInt      = (state_t *) INT_NEW;
-    //Set their PCs to their respective handlers
-    newTLB -> pc        = (unsigned int)tlbHandler;
-    newPgrmTrap -> pc   = (unsigned int)prgrmTrapHandler;
-    newSys -> pc        = (unsigned int)sysCallHandler;
-    newInt -> pc        = (unsigned int)interruptHandler;
-    //Set their other fields to defaults
-    initArea(newTLB);
-    initArea(newPgrmTrap);
-    initArea(newSys);
-    initArea(newInt);
+    /*
+    Create the new areas, initialize them with VM off, 
+    interrupts enabled, and in system mode
+    */
+    newArea = (state_t *) TLB_NEW;
+    newArea->pc = (unsigned int)tlbHandler;
+    newArea->sp   = RAMTOP;
+    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE;  
+    newArea->CP15_Control = ALLOFF;    
+
+    newArea = (state_t *) PRGRM_NEW;
+    newArea->pc = (unsigned int)prgrmTrapHandler;
+    newArea->sp   = RAMTOP;
+    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE;   
+    newArea->CP15_Control = ALLOFF;     
+
+    newArea = (state_t *) SYS_NEW;
+    newArea->pc = (unsigned int)sysCallHandler;
+    newArea->sp   = RAMTOP;
+    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE; 
+    newArea->CP15_Control = ALLOFF;     
+
+    newArea = (state_t *) INT_NEW;
+    newArea->pc = (unsigned int)interruptHandler;
+    newArea->sp   = RAMTOP;
+    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE;   
+    newArea->CP15_Control = ALLOFF;
 
     //Initialize device semaphores to 0
     for(int i = 0; i < DEVICES; i++)
@@ -89,7 +103,7 @@ void main()
 //loads given state
 void loadState(state_t* stateToLoad)
 {
-    LDST(&stateToLoad);
+    LDST(stateToLoad);
 }
 
 void copyState(state_t* src, state_t* dest)
@@ -116,15 +130,4 @@ void copyState(state_t* src, state_t* dest)
     dest->CP15_Cause = src->CP15_Cause;
     dest->TOD_Hi = src->TOD_Hi;
     dest->TOD_Low = src->TOD_Low;
-}
-
-/*
-Populate the fields of the given new area
-This function just saves eight lines of code in main()
-*/
-HIDDEN void initArea(state_t* newArea)
-{
-    newArea->sp   = RAMTOP;
-    newArea->cpsr = INTS_OFF | SYSMODE;   //Interrupts off, kernel mode
-    newArea->CP15_Control = ALLOFF;     //VM off
 }
