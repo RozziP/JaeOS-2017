@@ -27,10 +27,10 @@ void initPcbs()
 
   static pcb_t pcbTable[MAXPROC];
   
-  for(int i=0; i<MAXPROC; i++)
-  {
-    freePcb(&pcbTable[i]);
-  }
+  // for(int i=0; i<MAXPROC; i++)
+  // {
+  //   freePcb(&pcbTable[i]);
+  // }
 }
 
 /*====================================PROCESS QUEUE MODIFIER FUNCTIONS==========================================*\

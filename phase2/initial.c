@@ -16,11 +16,11 @@
 #include "../e/exceptions.e"
 #include "../e/initial.e"
 #include "../e/interrupts.e"
+#include "../e/p2test.e"
 
 #include "../h/const.h"
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
-#include "../e/p2test.e"
 
 HIDDEN void initArea(state_t* newArea);
 
@@ -60,25 +60,25 @@ void main()
     newArea = (state_t *) TLB_NEW;
     newArea->pc = (unsigned int)tlbHandler;
     newArea->sp   = RAMTOP;
-    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE;  
+    newArea->cpsr = ALLOFF | INTS_OFF | SYSMODE;  
     newArea->CP15_Control = ALLOFF;    
 
     newArea = (state_t *) PRGRM_NEW;
     newArea->pc = (unsigned int)prgrmTrapHandler;
     newArea->sp   = RAMTOP;
-    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE;   
+    newArea->cpsr = ALLOFF | INTS_OFF | SYSMODE;   
     newArea->CP15_Control = ALLOFF;     
 
     newArea = (state_t *) SYS_NEW;
     newArea->pc = (unsigned int)sysCallHandler;
     newArea->sp   = RAMTOP;
-    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE; 
+    newArea->cpsr = ALLOFF | INTS_OFF | SYSMODE; 
     newArea->CP15_Control = ALLOFF;     
 
     newArea = (state_t *) INT_NEW;
     newArea->pc = (unsigned int)interruptHandler;
     newArea->sp   = RAMTOP;
-    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE;   
+    newArea->cpsr = ALLOFF | INTS_OFF | SYSMODE;   
     newArea->CP15_Control = ALLOFF;
 
     //Initialize device semaphores to 0
@@ -90,7 +90,7 @@ void main()
     //Initialize the starting process
     pcb_PTR starter = allocPcb();
     starter->p_s.sp   = (RAMTOP - FRAMESIZE); 
-    starter->p_s.pc   = (unsigned int)test;  //start by running test() in p2test.c
+    starter->p_s.pc   = (unsigned int)test;     //start by running test() in p2test.c
     starter->p_s.cpsr = ALLOFF | SYSMODE;       //Interrupts off, kernel mode
     starter->p_s.CP15_Control = ALLOFF;         //VM off
     insertProcQ(&readyQueue, starter);

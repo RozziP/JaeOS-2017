@@ -15,7 +15,7 @@ HIDDEN unsigned int getCause();
 HIDDEN void terminalHelper();
 HIDDEN int getLineNumber();
 HIDDEN int getDeviceNumber(int lineNum);
-HIDDEN int getDeviceRegister(int lineNum, int DeviceNum);
+HIDDEN unsigned int getDeviceRegister(int lineNum, int DeviceNum);
 
 
 
@@ -142,6 +142,6 @@ HIDDEN void terminalHelper(int deviceNum)
 
 
 HIDDEN unsigned int getDeviceRegister(int lineNum, int deviceNum){
-    unsigned int registerLocation = DEVICEREGSTART + ((lineNum-NULLLINES)* DEVICEREGSIZE) + (DEVICEREGSIZE * DeviceNum);
+    unsigned int registerLocation = DEVICEREGSTART + ((lineNum-NULLLINES)* DEVICEREGSIZE) + (DEVICEREGSIZE * deviceNum);
 }
 
