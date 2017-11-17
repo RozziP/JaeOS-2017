@@ -60,25 +60,25 @@ void main()
     newArea = (state_t *) TLB_NEW;
     newArea->pc = (unsigned int)tlbHandler;
     newArea->sp   = RAMTOP;
-    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE;  
+    newArea->cpsr = ALLOFF | INTS_OFF | SYSMODE;  
     newArea->CP15_Control = ALLOFF;    
 
     newArea = (state_t *) PRGRM_NEW;
     newArea->pc = (unsigned int)prgrmTrapHandler;
     newArea->sp   = RAMTOP;
-    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE;   
+    newArea->cpsr = ALLOFF | INTS_OFF | SYSMODE;   
     newArea->CP15_Control = ALLOFF;     
 
     newArea = (state_t *) SYS_NEW;
     newArea->pc = (unsigned int)sysCallHandler;
     newArea->sp   = RAMTOP;
-    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE; 
+    newArea->cpsr = ALLOFF | INTS_OFF | SYSMODE; 
     newArea->CP15_Control = ALLOFF;     
 
     newArea = (state_t *) INT_NEW;
     newArea->pc = (unsigned int)interruptHandler;
     newArea->sp   = RAMTOP;
-    newArea->cpsr = ALLOF | INTS_OFF | SYSMODE;   
+    newArea->cpsr = ALLOFF | INTS_OFF | SYSMODE;   
     newArea->CP15_Control = ALLOFF;
 
     //Initialize device semaphores to 0
