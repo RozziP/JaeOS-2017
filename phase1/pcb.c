@@ -27,9 +27,11 @@ void initPcbs()
 
   static pcb_t pcbTable[MAXPROC];
   
-  for(int i=0; i<MAXPROC; i++)
+  int i = 0;
+  while(i<MAXPROC)
   {
     freePcb(&pcbTable[i]);
+    i++;
   }
 }
 

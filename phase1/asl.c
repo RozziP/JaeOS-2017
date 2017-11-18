@@ -35,9 +35,11 @@ tion.
 
     static semd_t semdTable[MAXPROC+2];
 
-    for(int i=0; i<MAXPROC; i++)
+    int i = 0;
+    while(i<MAXPROC)
     {
       freeSemd(&semdTable[i]);
+      i++;
     }
 
     //Set up the dummy nodes with values 0 and MAX_INT

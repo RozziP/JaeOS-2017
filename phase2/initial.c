@@ -82,9 +82,11 @@ void main()
     newArea->CP15_Control = ALLOFF;
 
     //Initialize device semaphores to 0
-    for(int i = 0; i < DEVICES; i++)
+    int i = 0;
+    while(i < DEVICES)
     {
         sema4[i] = 0;
+        i++;
     }
 
     //Initialize the starting process
