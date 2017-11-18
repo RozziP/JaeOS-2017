@@ -16,11 +16,11 @@
 #include "../e/exceptions.e"
 #include "../e/initial.e"
 #include "../e/interrupts.e"
+#include "../e/p2test.e"
 
 #include "../h/const.h"
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
-#include "../e/p2test.e"
 
 HIDDEN void initArea(state_t* newArea);
 
@@ -82,9 +82,11 @@ void main()
     newArea->CP15_Control = ALLOFF;
 
     //Initialize device semaphores to 0
-    for(int i = 0; i < DEVICES; i++)
+    int i = 0;
+    while(i < DEVICES)
     {
         sema4[i] = 0;
+        i++;
     }
 
     //Initialize the starting process
