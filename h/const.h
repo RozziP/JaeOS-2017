@@ -30,7 +30,7 @@
 
 
 //Values for configuring control registers
-#define RAMTOP           0x000002D4
+#define RAMTOP           0x00000204
 #define ALLOFF           0x00000000
 #define SYSMODE          0x0000001F
 #define USRMODE          0x00000010

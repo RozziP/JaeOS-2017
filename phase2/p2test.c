@@ -23,6 +23,13 @@
 #include "/usr/include/uarm/arch.h"
 #include "/usr/include/uarm/uARMconst.h"
 
+
+
+/* edited here */
+#include "../e/initial.e"
+/* fin editing */
+
+
 #define ALLOFF				0x00000000
 #define INTSDISABLED		0x000000C0
 
@@ -155,7 +162,7 @@ void print(char *msg) {
 void test() {	
 	
 	SYSCALL(VERHOGEN, (int)&testsem, 0, 0);					/* V(testsem)   */
-
+	initAreasBreak();
 	print("p1 v(testsem)\n");
 
 	/* set up states of the other processes */

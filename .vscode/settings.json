@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "*.e": "c"
+        "*.e": "c",
+        "libuarm.h": "c"
     }
 }

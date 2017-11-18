@@ -17,13 +17,19 @@
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
 
-HIDDEN void waitBreak(){
+HIDDEN void wait(){
     return;
 }
 
-HIDDEN void lsB(){
+HIDDEN void soft(){
     return;
 }
+
+HIDDEN void proc(){
+    return;
+}
+
+
 
 void scheduler()
 {   
@@ -34,26 +40,28 @@ void scheduler()
     {
         if(procCount == 0)
         {
+            proc();
             HALT();
         }
 
         if(softBlockCnt == 0)
         {
+            soft();
             PANIC();
         }
         else
         {
-            waitBreak();
-            setSTATUS(getSTATUS() & INTS_ON | SYSMODE);
+            currentProc = NULL;
+            wait();
+            setSTATUS(getSTATUS() & 0xFFFFFF3F);
+            wait();
             WAIT();
-            waitBreak();
         }
 
     }
     else //there are ready processes
     {
         currentProc = removeProcQ(&readyQueue);
-        lsB();
         loadState(&(currentProc->p_s));
 
         startTimeOfDay = getTODLO();

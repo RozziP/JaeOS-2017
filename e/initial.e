@@ -17,6 +17,9 @@ extern cput_t endTimeOfDay;
 extern cput_t timeUsed;
 extern cput_t timeLeft;
 
+
+extern void initAreasBreak();
+
 extern void main();
 extern void copyState(state_t* src, state_t* dest);
 extern void loadState(state_t* stateToLoad);

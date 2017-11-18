@@ -24,6 +24,9 @@ HIDDEN void sys8(state_t* callingProc);
 HIDDEN void killAllChildren(pcb_PTR top);
 HIDDEN void passUpOrDie(int cause);
 
+int lineNumber;
+int deviceNumber;
+
 HIDDEN void pthB(){
     return;
 }
@@ -51,10 +54,11 @@ void sysCallHandler(){
 
 
     //Unauthorized access, shut it down
+    /*
     if((requestedSysCall > 0) && (requestedSysCall < 9) && (callingProc->cpsr = USRMODE))
     {
         passUpOrDie(SYSTRAP);
-    }
+    }*/
 
     //Direct to syscall
     switch(requestedSysCall){
@@ -169,7 +173,9 @@ HIDDEN void sys4(state_t* callingProc){
         //TODO keep track of elapsed time
 
         //something controls sem
+        pthB();
         insertBlocked(sem, currentProc);
+        pthB();
         scheduler();
     }
     //nothing controls sem
@@ -267,18 +273,20 @@ HIDDEN void sys7(state_t* callingProc)
 Tell a device to wait
 */
 HIDDEN void sys8(state_t* callingProc){
-    int lineNumber, deviceNumber, isRead, index;
+    int isRead, index;
     int* sem;
 
     lineNumber = callingProc->a2;
     deviceNumber = callingProc->a3;
     isRead = callingProc->a4;
 
+    /*
     if(lineNumber < DISK || lineNumber > NULLLINES)
     {
         //Invalid request
         sys2(); 
     }
+    */
 
     //If the terminal is reading...
     if(lineNumber == TERMINAL && isRead)
