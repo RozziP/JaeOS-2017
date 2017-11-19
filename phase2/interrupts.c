@@ -36,7 +36,7 @@ void interruptHandler()
 		
 		timeUsed = endTimeOfDay - startTimeOfDay;
 		currentProc->p_time = currentProc->p_time + timeUsed;
-		timeLeft = timeLeft - timeUsed;
+		
 		
 		//copy the old interrupt area into the current state
 		copyState((state_t *) INT_OLD, &(currentProc->p_s));
@@ -80,17 +80,18 @@ void interruptHandler()
     }
 
     deviceNum = getDeviceNumber(lineNum);
-    if(lineNum = TERMINAL)
+
+    if(lineNum == TERMINAL)
     {
         terminalHelper(deviceNum);
     }
     else
     {
-        semIndex = (lineNum * DEVICEPERLINE) + deviceNum;
+        semIndex = ((lineNum - 3)* DEVICEPERLINE) + deviceNum;//subtracted 3 b/c no sems on lines 0-2
         deviceReg = (dtpreg_t*)getDeviceRegister(lineNum, deviceNum);
 
         //signal the device's semaphore
-        int sem = sema4[semIndex]++;
+        int sem = sema4[semIndex]++;//nut sure ++ works correctly in c. According to thomas
         pcb_PTR temp = removeBlocked(&sem);
         if(temp != NULL)
         {
@@ -118,6 +119,7 @@ HIDDEN int getDeviceNumber(int lineNum)
 
     //set our bitmap to the proper line
     unsigned int* bitMap = (unsigned int*)(INTMAP + (lineNum * DEVICEREGSIZE));
+    //do we need to subtract 3 form lineNum before calculating?
 
     while(!found)
     {
