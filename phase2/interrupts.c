@@ -96,6 +96,7 @@ void interruptHandler()
     
     //Calculate the device number, the device's semaphore index, and the device's register location
     deviceNum = getDeviceNumber(lineNum);
+    if(deviceNum == -1) PANIC();
     lineNum = lineNum - NULLLINES; //idk why we do this but the book says so
     semIndex = lineNum * DEVICEPERLINE + deviceNum;
     deviceReg = (devreg_t*)getDeviceRegister(lineNum, semIndex);
@@ -163,6 +164,11 @@ HIDDEN int getDeviceNumber(int lineNum)
 
     while(!found)
     {
+        if(deviceNum > 8)
+        {
+            deviceNum = -1;
+            break;
+        }
         if((tempDevice & *bitMap) != 0)
         {
             found = TRUE;
