@@ -53,7 +53,7 @@ void scheduler()
         else
         {
             wait();
-            setSTATUS( getSTATUS() & ALLINTSENABLED);
+            setSTATUS(getSTATUS() & INTSENABLED | SYSMODE);
             wait();
             WAIT();
         }

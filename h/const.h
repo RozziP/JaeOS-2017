@@ -89,13 +89,15 @@
 #define DEVICEREGSTART   0X00000040
 #define DEVICEREGSIZE    4
 #define DEVICEPERLINE    8
+#define LINEOFFSET       0X80
+#define DEVICEOFFSET     0x10
 
 
 #define ACK             1
 
 #define RI              20
 
-#define ALLINTSENABLED  0xFFFFFF3F
+#define INTSENABLED  0xFFFFFF3F
 
 
 #endif
