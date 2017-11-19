@@ -29,8 +29,6 @@ HIDDEN void proc(){
     return;
 }
 
-
-
 void scheduler()
 {   
     //If there was a process running, do something with its time slice
@@ -38,22 +36,24 @@ void scheduler()
 
     if(emptyProcQ(readyQueue))
     {
+        currentProc = NULL;
+
         if(procCount == 0)
         {
             proc();
             HALT();
         }
 
-        if(softBlockCnt == 0)
+        else if(softBlockCnt == 0)
         {
             soft();
             PANIC();
         }
+
         else
         {
-            currentProc = NULL;
             wait();
-            setSTATUS(getSTATUS() & 0xFFFFFF3F | SYSMODE);
+            setSTATUS(getSTATUS() & INTSENABLED | SYSMODE);
             wait();
             WAIT();
         }
@@ -62,12 +62,14 @@ void scheduler()
     else //there are ready processes
     {
         currentProc = removeProcQ(&readyQueue);
-        loadState(&(currentProc->p_s));
-
         startTimeOfDay = getTODLO();
         endTimeOfDay = 0;
         timeUsed = 0;
         timeLeft=QUANTUM;
+
+        loadState(&(currentProc->p_s));
+
+        
     }
     
         

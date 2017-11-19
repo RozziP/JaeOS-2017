@@ -92,11 +92,12 @@
 #define LINEOFFSET       0X80
 #define DEVICEOFFSET     0x10
 
-#define TIMEOFDAYLOW    0x000002E0
-#define TIMESCALE       0x000002E8
 
 #define ACK             1
 
+#define RI              20
+
+#define INTSENABLED  0xFFFFFF3F
 
 
 #endif

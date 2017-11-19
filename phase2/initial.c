@@ -101,6 +101,9 @@ void main()
     //off to see the wizard
     scheduler();
 
+    //screwed if were here
+    PANIC();
+
 }
 
 //loads given state
