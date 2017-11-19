@@ -46,14 +46,6 @@ void interruptHandler()
 		copyState((state_t *) INT_OLD, &(currentProc->p_s));
 	}
     intDebug(0x3);
-    intDebug(cause & LINE0);
-    intDebug(cause & LINE1);
-    intDebug(cause & LINE2);
-    intDebug(cause & LINE3);
-    intDebug(cause & LINE4);
-    intDebug(cause & LINE5);
-    intDebug(cause & LINE6);
-    intDebug(cause & LINE7);
     //Determine which line caused the interrupt
     if((cause & LINE2) != 0) //timer ran out
     {
@@ -96,21 +88,19 @@ void interruptHandler()
     
     //Calculate the device number, the device's semaphore index, and the device's register location
     deviceNum = getDeviceNumber(lineNum);
-    lineNum = lineNum - NULLLINES; //idk why we do this but the book says so
+    lineNum = lineNum - NULLLINES; 
     semIndex = lineNum * DEVICEPERLINE + deviceNum;
     deviceReg = (devreg_t*)getDeviceRegister(lineNum, semIndex);
 
     //if it's a terminal, we need to do special things
     if(lineNum = TERMINAL)
     {
-        intDebug(0x6);
-        bool isRead = TRUE;
+        intDebug(0x60);
         //the terminal was writing
-        if(0/*!read*/)
+        if(((deviceReg -> term.transm_status) & 0x0F) != READY)
         {
             intDebug(0x7);
             semIndex += DEVICEPERLINE;
-            isRead = FALSE;
             deviceReg->term.transm_command = ACK;
             status = deviceReg->term.transm_status;
         }
@@ -120,29 +110,29 @@ void interruptHandler()
             status = deviceReg->term.recv_status;
         }
     }
-    else //it's not a terminal
-    {
-        intDebug(0x8);
+    else{
+        status = deviceReg -> dtp.status;
         deviceReg->dtp.command = ACK;
-        status = deviceReg->dtp.status;
-
-        //signal the device's semaphore
-        int* sem = &(sema4[semIndex]);
-        *sem++;
-        if(sem <= 0)
-        {
-            pcb_PTR temp = removeBlocked(sem);
-            if(temp != NULL)
-            {
-                temp->p_semAdd = NULL;
-                (temp->p_s).a1 = status;
-                softBlockCnt--;
-
-                insertProcQ(&(readyQueue), temp);
-            }
-        }
-        
     }
+
+    intDebug(0x80);
+    
+    //signal the device's semaphore
+    sema4[semIndex] = sema4[semIndex] + 1;
+    if(sema4[semIndex] <= 0)
+    {
+        pcb_PTR temp = removeBlocked(&(sema4[semIndex]));
+        if(temp != NULL)
+        {
+            temp->p_semAdd = NULL;
+            (temp->p_s).a1 = status;
+            softBlockCnt--;
+
+            insertProcQ(&(readyQueue), temp);
+        }
+    }
+        
+    
     intDebug(0x9);
     startTimeOfDay = getTODLO();
     loadState((state_t *)INT_OLD);
@@ -153,16 +143,17 @@ void interruptHandler()
 
 HIDDEN int getDeviceNumber(int lineNum)
 {
-    int deviceNum = 0;
+    unsigned int deviceNum = 0;
     unsigned int tempDevice = DEVICEFRONT;
     bool found = FALSE;
 
     //set our bitmap to the proper line
-    unsigned int* bitMap = (unsigned int*)(INTMAP + (lineNum * DEVICEREGSIZE));
+    unsigned int* bitMap = (unsigned int*)(INTMAP + ((lineNum-3) * DEVICEREGSIZE));
     //do we need to subtract 3 form lineNum before calculating?
 
     while(!found)
     {
+        intDebug(deviceNum);
         if((tempDevice & *bitMap) != 0)
         {
             found = TRUE;
@@ -170,6 +161,7 @@ HIDDEN int getDeviceNumber(int lineNum)
         else
         {
             tempDevice = tempDevice << 1; //shift to the next device
+            intDebug(tempDevice);
             deviceNum++;
         }
     }

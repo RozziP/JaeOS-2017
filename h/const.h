@@ -34,7 +34,7 @@
 #define SYSMODE          0x0000001F
 #define USRMODE          0x00000010
 #define INTS_OFF         0x000000C0
-#define INTS_ON          0x00000000
+#define INTS_ON          0xFFFFFF3F
 
 //Locations of new and old states
 #define INT_OLD          0x00007000
@@ -93,9 +93,10 @@
 
 
 #define ACK             1
+#define READY           1
 #define RI              20
 
-#define INTSENABLED  0xFFFFFF3F
+
 
 
 #endif

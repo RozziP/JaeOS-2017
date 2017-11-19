@@ -52,8 +52,9 @@ void scheduler()
 
         else
         {
+            setTIMER(QUANTUM);
             wait();
-            setSTATUS(getSTATUS() & INTSENABLED | SYSMODE);
+            setSTATUS((getSTATUS() & INTS_ON) | SYSMODE);
             wait();
             WAIT();
         }
