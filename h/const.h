@@ -90,11 +90,12 @@
 #define DEVICEREGSIZE    4
 #define DEVICEPERLINE    8
 
-#define TIMEOFDAYLOW    0x000002E0
-#define TIMESCALE       0x000002E8
 
 #define ACK             1
 
+#define RI              20
+
+#define ALLINTSENABLED  0xFFFFFF3F
 
 
 #endif

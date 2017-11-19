@@ -33,15 +33,13 @@ HIDDEN void pthB(){
 
 void tlbHandler()
 {
-    state_t* callingProc = (state_t*) TLB_OLD;
+
     passUpOrDie(TLBTRAP);
     
 }
 
 void prgrmTrapHandler()
 {
-    //pthB();
-    state_t* callingProc = (state_t*) PRGRM_OLD;
     passUpOrDie(PRGRMTRAP);
 }
 
@@ -54,12 +52,16 @@ void sysCallHandler(){
 
 
     //Unauthorized access, shut it down
-    /*
-    if((requestedSysCall > 0) && (requestedSysCall < 9) && (callingProc->cpsr = USRMODE))
+    
+    if((callingProc->cpsr & USRMODE)==0)
     {
-        passUpOrDie(SYSTRAP);
-    }*/
+        copyState((state_t*) SYS_OLD , (state_t*) PRGRM_OLD);
 
+        ((state_t*) PRGRM_OLD )-> CP15_Cause = RI;
+
+        passUpOrDie(SYSTRAP);
+
+    }
     //Direct to syscall
     switch(requestedSysCall){
         case BIRTH:
@@ -72,7 +74,7 @@ void sysCallHandler(){
 
         case VERHOGEN:
             sys3(callingProc);
-        break;
+        break; 
 
         case PASSEREN:
             sys4(callingProc);
@@ -99,12 +101,16 @@ void sysCallHandler(){
         break;
     }
 
+    //maybe pass up or die?
+
     //Critical Failure
     PANIC();
+
 
 }
 
 HIDDEN void sys1(state_t* callingProc){
+
     pcb_PTR newPCB = allocPcb();
     
     if(newPCB == NULL){
@@ -113,15 +119,16 @@ HIDDEN void sys1(state_t* callingProc){
     }
     else
     {
-    callingProc->a1 = SUCCESS;
-    ++procCount;
+        callingProc->a1 = SUCCESS;
 
-    //Make new process a progeny of the callingProcess
-    insertChild(currentProc, newPCB);
-    //put it on the ready queue
-    insertProcQ(&readyQueue, newPCB);
-    //copy the old state into the new process
-    copyState((state_t *)callingProc->a2, &(newPCB->p_s));
+        ++procCount;
+
+        //Make new process a progeny of the callingProcess
+        insertChild(currentProc, newPCB);
+        //put it on the ready queue
+        insertProcQ(&readyQueue, newPCB);
+        //copy the old state into the new process
+        copyState((state_t *)callingProc->a2, &(newPCB->p_s));
     }
     //load the current/new process
     loadState(&(currentProc->p_s));
@@ -148,11 +155,12 @@ HIDDEN void sys3(state_t* callingProc){
     {
         //unblock the process
         tempProc = removeBlocked(sem);
-        tempProc->p_semAdd = NULL;
+        
         
         if(tempProc != NULL)
         {
             //put on ready queue
+            tempProc -> p_semAdd = NULL;
             insertProcQ(&readyQueue, tempProc);
         }
         //else nothing waiting
@@ -273,7 +281,7 @@ HIDDEN void sys7(state_t* callingProc)
 Tell a device to wait
 */
 HIDDEN void sys8(state_t* callingProc){
-    int isRead, index;
+    int isRead, semIndex;
     int* sem;
 
     lineNumber = callingProc->a2;
@@ -291,22 +299,32 @@ HIDDEN void sys8(state_t* callingProc){
     //If the terminal is reading...
     if(lineNumber == TERMINAL && isRead)
     {
-        index = (deviceNumber*8) + (lineNumber + 8);
+        semIndex= 8*(lineNumber-3) + deviceNumber + 8;
     }
     //else the terminal is writing
     else
     {
-        index = index = (deviceNumber*8) + lineNumber;
+        semIndex= 8*(lineNumber-3) + deviceNumber + 8;
     }
-    sem = &(sema4[index]);
+    sem = &(sema4[semIndex]);
     *sem = *sem-1;
 
     if (*sem < 0){
+
+        //Store ending time of day
+        endTimeOfDay=getTODLO();
+        
+        //Store elapsed time
+        timeUsed = endTimeOfDay - startTimeOfDay;
+        currentProc -> p_time = currentProc -> p_time + timeUsed;
+        timeLeft = timeLeft - timeUsed;
+
         insertBlocked(sem, currentProc);
         softBlockCnt++;
+        currentProc=NULL;
         scheduler();
     }
-
+    //currentProc -> p_s.a1 = sema4[]
     loadState(callingProc);
 }
 
@@ -362,14 +380,16 @@ HIDDEN void passUpOrDie(int cause){
         case SYSTRAP:  
             if(currentProc->sysCallOld != NULL){
                 //systrap called
-                copyState((state_t*)SYS_OLD, currentProc->sysCallOld);
+                copyState((state_t*)SYS_OLD, (state_t*) currentProc->sysCallOld);
+                copyState((state_t*) SYS_NEW, &currentProc -> p_s);
                 loadState(currentProc->sysCallNew);
             }
         break;
         case PRGRMTRAP:  
             if(currentProc->prgrmTrapOld != NULL){
                 //prgrmTrap called
-                copyState((state_t*) PRGRM_OLD,currentProc->prgrmTrapOld);
+                copyState((state_t*) PRGRM_OLD, (state_t*) currentProc->prgrmTrapOld);
+                copyState((state_t*) PRGRM_NEW,  &currentProc -> p_s);
                 loadState(currentProc->prgrmTrapNew);
             }
         break;
@@ -377,7 +397,8 @@ HIDDEN void passUpOrDie(int cause){
             if(currentProc -> tlbOld != NULL)
             {
                 //tlbTrap called
-                copyState((state_t*) TLB_OLD,currentProc->tlbOld);
+                copyState((state_t*) TLB_OLD, (state_t*) currentProc->tlbOld);
+                copyState((state_t*) TLB_NEW,  &currentProc -> p_s);
                 loadState(currentProc->tlbNew);
             }
         break;
