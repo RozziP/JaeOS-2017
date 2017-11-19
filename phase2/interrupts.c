@@ -89,7 +89,7 @@ void interruptHandler()
     {
         bool isRead = TRUE;
         //the terminal was writing
-        if(1/*!read*/)
+        if(0/*!read*/)
         {
             semIndex += DEVICEPERLINE;
             isRead = FALSE;
