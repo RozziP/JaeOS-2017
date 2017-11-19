@@ -140,7 +140,7 @@ HIDDEN void terminalHelper(int deviceNum)
 }
    
 
-
+//devAddrBase = 0x0000.0040 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 HIDDEN unsigned int getDeviceRegister(int lineNum, int deviceNum){
     unsigned int registerLocation = DEVICEREGSTART + ((lineNum-NULLLINES)* LINEOFFSET) + (deviceNum * DEVICEOFFSET);
 }
