@@ -64,26 +64,26 @@ void interruptHandler()
         setTIMER(QUANTUM);
         scheduler();
     }
-    else if(cause & LINE3 !=0)
+    else if((cause & LINE3) !=0)
     {
        lineNum = DISK;
     }
-    else if(cause & LINE4 !=0)
+    else if((cause & LINE4) !=0)
     {
        lineNum = TAPE;
     }
 
-    else if(cause & LINE5 !=0)
+    else if((cause & LINE5) !=0)
     {
        lineNum = NETWORK;
     }
 
-    else if(cause & LINE6 !=0)
+    else if((cause & LINE6) !=0)
     {
        lineNum = PRINTER;
     }
 
-    else if(cause & LINE7 == LINE7)
+    else if((cause & LINE7) !=0)
     {
        lineNum = TERMINAL;
     }
