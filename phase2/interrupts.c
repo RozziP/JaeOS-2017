@@ -25,7 +25,7 @@ void interruptHandler()
     int lineNum;
     int deviceNum; 
     int semIndex;
-    dtpreg_t* deviceReg;
+    devreg_t* deviceReg;
     ((state_t*)INT_OLD) -> pc = ((state_t*)INT_OLD) -> pc - 4; //Go back to the executing instruction after interrupt
 
     //if there was a process running, we have to manage its timer
@@ -87,7 +87,7 @@ void interruptHandler()
     else
     {
         semIndex = (lineNum * DEVICEPERLINE) + deviceNum;
-        deviceReg = (dtpreg_t*)getDeviceRegister(lineNum, deviceNum);
+        deviceReg = (devreg_t*)getDeviceRegister(lineNum, deviceNum);
 
         //signal the device's semaphore
         int sem = sema4[semIndex]++;
@@ -143,5 +143,6 @@ HIDDEN void terminalHelper(int deviceNum)
 //devAddrBase = 0x0000.0040 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 HIDDEN unsigned int getDeviceRegister(int lineNum, int deviceNum){
     unsigned int registerLocation = DEVICEREGSTART + ((lineNum-NULLLINES)* LINEOFFSET) + (deviceNum * DEVICEOFFSET);
+    return registerLocation;
 }
 
