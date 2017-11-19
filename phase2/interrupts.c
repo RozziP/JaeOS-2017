@@ -12,7 +12,6 @@ interrupts.c
 #include "/usr/include/uarm/libuarm.h"
 
 HIDDEN unsigned int getCause();
-HIDDEN void terminalHelper();
 HIDDEN int getLineNumber();
 HIDDEN int getDeviceNumber(int lineNum);
 HIDDEN unsigned int getDeviceRegister(int lineNum, int DeviceNum);
@@ -23,6 +22,7 @@ void interruptHandler()
 {
     unsigned int cause = ((state_t*)INT_OLD) -> CP15_Cause >> 24; //shift right by 24 bits for comparison
     int lineNum;
+    int status;
     int deviceNum; 
     int semIndex;
     devreg_t* deviceReg;
@@ -78,19 +78,34 @@ void interruptHandler()
     }
 
     
-    //Calculate the device number and the device's semaphore index
+    //Calculate the device number, the device's semaphore index, and the device's register location
     deviceNum = getDeviceNumber(lineNum);
     lineNum = lineNum - NULLLINES; //idk why we do this but the book says so
     semIndex = lineNum * DEVICEPERLINE + deviceNum;
+    deviceReg = (devreg_t*)getDeviceRegister(lineNum, semIndex);
 
     //if it's a terminal, we need to do special things
     if(lineNum = TERMINAL)
     {
-        terminalHelper(deviceNum);
+        bool isRead = TRUE;
+        //the terminal was writing
+        if(/*!read*/)
+        {
+            semIndex += DEVICEPERLINE;
+            isRead = FALSE;
+            deviceReg->term.transm_command = ACK;
+            status = deviceReg->term.transm_status;
+        }
+        else //the terminal is reading
+        {
+            deviceReg->term.recv_command = ACK;
+            status = deviceReg->recv_status;
+        }
     }
-    else
+    else //it's not a terminal
     {
-        deviceReg = (devreg_t*)getDeviceRegister(lineNum, semIndex);
+        deviceReg->dtp.command = ACK;
+        status = deviceReg->dtp.status;
 
         //signal the device's semaphore
         int* sem = &(sema4[semIndex]);
@@ -101,13 +116,13 @@ void interruptHandler()
             if(temp != NULL)
             {
                 temp->p_semAdd = NULL;
-                (temp->p_s).a1 = deviceReg->dtp.status;
+                (temp->p_s).a1 = status;
                 softBlockCnt--;
 
                 insertProcQ(&(readyQueue), temp);
             }
         }
-        deviceReg->dtp.command = ACK;
+        
     }
     startTimeOfDay = getTODLO();
     loadState((state_t *)INT_OLD);
@@ -138,15 +153,6 @@ HIDDEN int getDeviceNumber(int lineNum)
         }
     }
     return deviceNum;
-}
-
-HIDDEN void terminalHelper(int semIndex)
-{
-    bool isRead;
-
-    if()
-}
-   
 
 //devAddrBase = 0x0000.0040 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
 HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex){
