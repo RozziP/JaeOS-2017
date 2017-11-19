@@ -12,28 +12,30 @@ interrupts.c
 #include "/usr/include/uarm/libuarm.h"
 
 HIDDEN unsigned int getCause();
-HIDDEN void terminalHelper();
 HIDDEN int getLineNumber();
 HIDDEN int getDeviceNumber(int lineNum);
-HIDDEN unsigned int getDeviceRegister(int lineNum, int DeviceNum);
+HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex);
 
-
+HIDDEN void intDebug(unsigned int x){
+    return;
+}
 
 void interruptHandler()
 {
     unsigned int cause = ((state_t*)INT_OLD) -> CP15_Cause >> 24; //shift right by 24 bits for comparison
     int lineNum;
+    int status;
     int deviceNum; 
     int semIndex;
-    dtpreg_t* deviceReg;
+    devreg_t* deviceReg;
     ((state_t*)INT_OLD) -> pc = ((state_t*)INT_OLD) -> pc - 4; //Go back to the executing instruction after interrupt
 
+    intDebug(0x1);
     //if there was a process running, we have to manage its timer
-    if(currentProc != NULL){
-		cput_t endTimeOfDay;
-		
+    if(currentProc != NULL)
+    {
+        intDebug(0x2);
 		endTimeOfDay=getTODLO();
-		
 		timeUsed = endTimeOfDay - startTimeOfDay;
 		currentProc->p_time = currentProc->p_time + timeUsed;
 		
@@ -41,10 +43,11 @@ void interruptHandler()
 		//copy the old interrupt area into the current state
 		copyState((state_t *) INT_OLD, &(currentProc->p_s));
 	}
-
+    intDebug(0x3);
     //Determine which line caused the interrupt
     if((cause & LINE2) != 0) //timer ran out
     {
+        intDebug(0x4);
         //stop the current process and put it back on the readyqueue
         insertProcQ(&(readyQueue), currentProc);
         currentProc = NULL;
@@ -76,36 +79,63 @@ void interruptHandler()
     }
     else
     {
+        intDebug(0x5);
         PANIC();
     }
 
+    
+    //Calculate the device number, the device's semaphore index, and the device's register location
     deviceNum = getDeviceNumber(lineNum);
+    lineNum = lineNum - NULLLINES; //idk why we do this but the book says so
+    semIndex = lineNum * DEVICEPERLINE + deviceNum;
+    deviceReg = (devreg_t*)getDeviceRegister(lineNum, semIndex);
 
-    if(lineNum == TERMINAL)
+    //if it's a terminal, we need to do special things
+    if(lineNum = TERMINAL)
     {
-        terminalHelper(deviceNum);
-    }
-    else
-    {
-        semIndex = ((lineNum - 3)* DEVICEPERLINE) + deviceNum;//subtracted 3 b/c no sems on lines 0-2
-        deviceReg = (dtpreg_t*)getDeviceRegister(lineNum, deviceNum);
-
-        //signal the device's semaphore
-        int sem = sema4[semIndex]++;//nut sure ++ works correctly in c. According to thomas
-        pcb_PTR temp = removeBlocked(&sem);
-        if(temp != NULL)
+        intDebug(0x6);
+        bool isRead = TRUE;
+        //the terminal was writing
+        if(0/*!read*/)
         {
-            temp->p_semAdd = NULL;
-
-            (temp->p_s).a1 = deviceReg->status;
-            softBlockCnt--;
-
-            insertProcQ(&(readyQueue), temp);
+            intDebug(0x7);
+            semIndex += DEVICEPERLINE;
+            isRead = FALSE;
+            deviceReg->term.transm_command = ACK;
+            status = deviceReg->term.transm_status;
+        }
+        else //the terminal is reading
+        {
+            deviceReg->term.recv_command = ACK;
+            status = deviceReg->term.recv_status;
         }
     }
-    deviceReg->command = ACK;
+    else //it's not a terminal
+    {
+        intDebug(0x8);
+        deviceReg->dtp.command = ACK;
+        status = deviceReg->dtp.status;
+
+        //signal the device's semaphore
+        int* sem = &(sema4[semIndex]);
+        *sem++;
+        if(sem <= 0)
+        {
+            pcb_PTR temp = removeBlocked(sem);
+            if(temp != NULL)
+            {
+                temp->p_semAdd = NULL;
+                (temp->p_s).a1 = status;
+                softBlockCnt--;
+
+                insertProcQ(&(readyQueue), temp);
+            }
+        }
+        
+    }
+    intDebug(0x9);
     startTimeOfDay = getTODLO();
-    loadState((state_t *) INT_OLD);
+    loadState((state_t *)INT_OLD);
 
 }
 
@@ -115,7 +145,7 @@ HIDDEN int getDeviceNumber(int lineNum)
 {
     int deviceNum = 0;
     unsigned int tempDevice = DEVICEFRONT;
-    BOOL found = FALSE;
+    bool found = FALSE;
 
     //set our bitmap to the proper line
     unsigned int* bitMap = (unsigned int*)(INTMAP + (lineNum * DEVICEREGSIZE));
@@ -136,14 +166,10 @@ HIDDEN int getDeviceNumber(int lineNum)
     return deviceNum;
 }
 
-HIDDEN void terminalHelper(int deviceNum)
-{
-    return;
-}
-   
-
 //devAddrBase = 0x0000.0040 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
-HIDDEN unsigned int getDeviceRegister(int lineNum, int deviceNum){
-    unsigned int registerLocation = DEVICEREGSTART + ((lineNum-NULLLINES)* LINEOFFSET) + (deviceNum * DEVICEOFFSET);
+HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex)
+{
+    unsigned int registerLocation;
+    registerLocation = DEVICEREGSTART + (lineNum * LINEOFFSET) + (semIndex * DEVICEOFFSET);
+    return registerLocation;
 }
-
