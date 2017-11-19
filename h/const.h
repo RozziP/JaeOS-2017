@@ -11,7 +11,6 @@
 
 
 #define MAXPROC  		 20
-#define BOOL             int //Got this idea from Neal
 #define MAX_INT          0xFFFFFFFF
 #define FAILURE			 -1
 #define SUCCESS			 0
@@ -94,7 +93,6 @@
 
 
 #define ACK             1
-
 #define RI              20
 
 #define INTSENABLED  0xFFFFFF3F

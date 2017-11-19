@@ -9,6 +9,7 @@
 
 #include "/usr/include/uarm/uARMtypes.h"
 
+typedef bool int //Got this idea from Neal
 typedef signed int cput_t;
 
 /* process table entry type */

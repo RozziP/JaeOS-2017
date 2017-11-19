@@ -291,12 +291,12 @@ HIDDEN void sys8(state_t* callingProc){
     //If the terminal is reading...
     if((lineNumber == TERMINAL) && isRead)
     {
-        semIndex= 8*(lineNumber-3) + deviceNumber + 8;
+        semIndex = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber;
     }
     //else the terminal is writing so add 8 to get the terminal device
     else
     {
-        semIndex= 8*(lineNumber-3) + deviceNumber + 8;
+        semIndex = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber + DEVICEPERLINE;
     }
 
     sem = &(sema4[semIndex]);
@@ -305,7 +305,7 @@ HIDDEN void sys8(state_t* callingProc){
     if (*sem < 0){
 
         //Save the final time of process
-        endTimeOfDay=getTODLO();
+        endTimeOfDay = getTODLO();
         
         //Save the time used since last recording
         timeUsed = endTimeOfDay - startTimeOfDay;
