@@ -90,7 +90,7 @@ pcb_PTR mkEmptyProcQ()
 Return TRUE if the queue whose tail is pointed to by tp is empty.
 Return FALSE otherwise. 
 */
-BOOL emptyProcQ(pcb_PTR tp)
+bool emptyProcQ(pcb_PTR tp)
 {
   return (tp == NULL);
 }
@@ -228,7 +228,7 @@ pcb_PTR headProcQ(pcb_PTR tp)
 Return TRUE if the ProcBlk pointed to by p has no children. Return
 FALSE otherwise.
  */
-BOOL emptyChild(pcb_PTR p)
+bool emptyChild(pcb_PTR p)
 {
   return (p->p_child == NULL);
 }

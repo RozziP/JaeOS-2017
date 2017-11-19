@@ -281,7 +281,8 @@ HIDDEN void sys7(state_t* callingProc)
 Tell a device to wait
 */
 HIDDEN void sys8(state_t* callingProc){
-    int isRead, index, sem;
+    int isRead, index;
+    int* sem;
 
     lineNumber = callingProc->a2;
     deviceNumber = callingProc->a3;
@@ -291,15 +292,15 @@ HIDDEN void sys8(state_t* callingProc){
     //If the terminal is reading...
     if((lineNumber == TERMINAL) && isRead)
     {
-        semIndex = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber;
+        index = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber;
     }
     //else the terminal is writing so add 8 to get the terminal device
     else
     {
-        semIndex = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber + DEVICEPERLINE;
+        index = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber + DEVICEPERLINE;
     }
 
-    sem = &(sema4[semIndex]);
+    sem = &(sema4[index]);
     *sem = *sem-1;
 
     if (*sem < 0){

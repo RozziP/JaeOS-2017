@@ -14,7 +14,7 @@ interrupts.c
 HIDDEN unsigned int getCause();
 HIDDEN int getLineNumber();
 HIDDEN int getDeviceNumber(int lineNum);
-HIDDEN unsigned int getDeviceRegister(int lineNum, int DeviceNum);
+HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex);
 
 
 
@@ -89,7 +89,7 @@ void interruptHandler()
     {
         bool isRead = TRUE;
         //the terminal was writing
-        if(/*!read*/)
+        if(1/*!read*/)
         {
             semIndex += DEVICEPERLINE;
             isRead = FALSE;
@@ -99,7 +99,7 @@ void interruptHandler()
         else //the terminal is reading
         {
             deviceReg->term.recv_command = ACK;
-            status = deviceReg->recv_status;
+            status = deviceReg->term.recv_status;
         }
     }
     else //it's not a terminal
@@ -109,10 +109,10 @@ void interruptHandler()
 
         //signal the device's semaphore
         int* sem = &(sema4[semIndex]);
-        *sem++
+        *sem++;
         if(sem <= 0)
         {
-            pcb_PTR temp = removeBlocked(&sem);
+            pcb_PTR temp = removeBlocked(sem);
             if(temp != NULL)
             {
                 temp->p_semAdd = NULL;
@@ -153,10 +153,12 @@ HIDDEN int getDeviceNumber(int lineNum)
         }
     }
     return deviceNum;
-
-//devAddrBase = 0x0000.0040 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
-HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex){
-    unsigned int registerLocation = DEVICEREGSTART + (lineNum * LINEOFFSET) + (semIndex * DEVICEOFFSET);
-    return registerLocation;
 }
 
+//devAddrBase = 0x0000.0040 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
+HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex)
+{
+    unsigned int registerLocation;
+    registerLocation = DEVICEREGSTART + (lineNum * LINEOFFSET) + (semIndex * DEVICEOFFSET);
+    return registerLocation;
+}

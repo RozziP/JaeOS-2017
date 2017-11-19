@@ -9,15 +9,12 @@
 
 #include "/usr/include/uarm/uARMtypes.h"
 
-typedef bool int //Got this idea from Neal
-typedef signed int cput_t;
+typedef int bool; //Got this idea from Neal
+typedef unsigned int cput_t;
 
 /* process table entry type */
 typedef struct pcb_t
 {
-    
-
-
     struct pcb_t
     /* process queue fields */
         *p_next,		// ptr to next entry 

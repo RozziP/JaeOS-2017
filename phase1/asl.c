@@ -70,7 +70,7 @@ to semAdd, and s procq to mkEmptyProcQ()), and proceed as
 above. If a new semaphore descriptor needs to be allocated and the
 semdFree list is empty, return TRUE. In all other cases return FALSE.
 */
-BOOL insertBlocked(int* semAdd, pcb_PTR p)
+bool insertBlocked(int* semAdd, pcb_PTR p)
 {
    semd_PTR prnt = find(semAdd);
    semd_PTR child = prnt->s_next;
