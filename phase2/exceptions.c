@@ -273,35 +273,32 @@ HIDDEN void sys7(state_t* callingProc)
 Tell a device to wait
 */
 HIDDEN void sys8(state_t* callingProc){
-    int isRead, index;
-    int* sem;
+    int isRead, index, sem;
 
     lineNumber = callingProc->a2;
     deviceNumber = callingProc->a3;
     isRead = callingProc->a4;
 
-    /*
-    if(lineNumber < DISK || lineNumber > NULLLINES)
-    {
-        //Invalid request
-        sys2(); 
-    }
-    */
 
     //If the terminal is reading...
-    if(lineNumber == TERMINAL && isRead)
+    if((lineNumber == TERMINAL) && isRead)
     {
-        index = (deviceNumber*8) + (lineNumber + 8);
+        sem = (deviceNumber*8) + lineNumber + DEVICEPERLINE);
     }
     //else the terminal is writing
     else
     {
-        index = index = (deviceNumber*8) + lineNumber;
+        sem = (deviceNumber*8) + lineNumber;
     }
-    sem = &(sema4[index]);
-    *sem = *sem-1;
 
-    if (*sem < 0){
+    sem = sem-1;
+    if (sem < 0){
+        //record the passing of time
+        endTimeOfDay = getTODLO();
+        timeUsed = endTimeOfDay - startTimeOfDay;
+        currentProc->p_time = currentProc->p_time + timeUsed;
+
+        //block the process
         insertBlocked(sem, currentProc);
         softBlockCnt++;
         scheduler();

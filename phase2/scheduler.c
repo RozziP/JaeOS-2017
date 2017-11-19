@@ -53,7 +53,7 @@ void scheduler()
         {
             currentProc = NULL;
             wait();
-            setSTATUS(getSTATUS() & 0xFFFFFF3F);
+            setSTATUS(getSTATUS() & 0xFFFFFF3F | SYSMODE);
             wait();
             WAIT();
         }

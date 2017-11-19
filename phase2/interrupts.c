@@ -80,7 +80,6 @@ void interruptHandler()
     }
 
     deviceNum = getDeviceNumber(lineNum);
-
     if(lineNum = TERMINAL)
     {
         terminalHelper(deviceNum);
@@ -143,6 +142,6 @@ HIDDEN void terminalHelper(int deviceNum)
 
 
 HIDDEN unsigned int getDeviceRegister(int lineNum, int deviceNum){
-    unsigned int registerLocation = DEVICEREGSTART + ((lineNum-NULLLINES)* DEVICEREGSIZE) + (DEVICEREGSIZE * deviceNum);
+    unsigned int registerLocation = DEVICEREGSTART + ((lineNum-NULLLINES)* LINEOFFSET) + (deviceNum * DEVICEOFFSET);
 }
 
