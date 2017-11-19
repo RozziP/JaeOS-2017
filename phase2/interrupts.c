@@ -20,9 +20,11 @@ HIDDEN void intDebug(unsigned int x){
     return;
 }
 
+unsigned int cause;
+
 void interruptHandler()
 {
-    unsigned int cause = ((state_t*)INT_OLD) -> CP15_Cause >> 24; //shift right by 24 bits for comparison
+    cause = ((state_t*)INT_OLD) -> CP15_Cause >> 24; //shift right by 24 bits for comparison
     int lineNum;
     int status;
     int deviceNum; 
@@ -30,7 +32,7 @@ void interruptHandler()
     devreg_t* deviceReg;
     ((state_t*)INT_OLD) -> pc = ((state_t*)INT_OLD) -> pc - 4; //Go back to the executing instruction after interrupt
 
-    intDebug(0x1);
+    intDebug(cause);
     //if there was a process running, we have to manage its timer
     if(currentProc != NULL)
     {
@@ -44,6 +46,14 @@ void interruptHandler()
 		copyState((state_t *) INT_OLD, &(currentProc->p_s));
 	}
     intDebug(0x3);
+    intDebug(cause & LINE0);
+    intDebug(cause & LINE1);
+    intDebug(cause & LINE2);
+    intDebug(cause & LINE3);
+    intDebug(cause & LINE4);
+    intDebug(cause & LINE5);
+    intDebug(cause & LINE6);
+    intDebug(cause & LINE7);
     //Determine which line caused the interrupt
     if((cause & LINE2) != 0) //timer ran out
     {
@@ -72,8 +82,8 @@ void interruptHandler()
     {
        lineNum = PRINTER;
     }
-    
-    else if(cause & LINE7 !=0)
+
+    else if(cause & LINE7 == LINE7)
     {
        lineNum = TERMINAL;
     }

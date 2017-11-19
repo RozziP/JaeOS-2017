@@ -72,16 +72,16 @@
 #define PRINTER 		 6
 #define TERMINAL		 7
 
-#define LINE1             0x00000001
-#define LINE2             0x00000002
-#define LINE3			 0x00000004
-#define LINE4			 0x00000008
-#define LINE5			 0x00000010
-#define LINE6			 0x00000020
-#define LINE7   	    	 0x00000040
-#define LINE8   	    	 0x00000080
+#define LINE0            0x00000001
+#define LINE1            0x00000002
+#define LINE2			 0x00000004
+#define LINE3			 0x00000008
+#define LINE4			 0x00000010
+#define LINE5			 0x00000020
+#define LINE6   	     0x00000040
+#define LINE7   	     0x00000080
 
-#define DEVICEFRONT        0x00000001   
+#define DEVICEFRONT      0x00000001   
 
 #define INTMAP           0x00006FE0
 
