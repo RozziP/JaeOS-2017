@@ -30,7 +30,7 @@ void interruptHandler()
     int deviceNum; 
     int semIndex;
     devreg_t* deviceReg;
-    ((state_t*)INT_OLD) -> pc = ((state_t*)INT_OLD) -> pc - 4; //Go back to the executing instruction after interrupt
+    ((state_t*)INT_OLD) -> pc = ((state_t*)INT_OLD) -> pc -4; //Go back to the executing instruction after interrupt
 
    
     //if there was a process running, we have to manage its timer
@@ -89,10 +89,12 @@ void interruptHandler()
     //Calculate the device number, the device's semaphore index, and the device's register location
     deviceNum = getDeviceNumber(lineNum);
     intDebug(0x1111);
+    intDebug(deviceNum);
     if(deviceNum == -1) PANIC();
     lineNum = lineNum - NULLLINES; 
     semIndex = lineNum * DEVICEPERLINE + deviceNum;
     deviceReg = (devreg_t*)getDeviceRegister(lineNum, semIndex);
+    intDebug((unsigned int) deviceReg);
 
     //if it's a terminal, we need to do special things
     if(lineNum = TERMINAL)
@@ -107,7 +109,6 @@ void interruptHandler()
             semIndex = semIndex + DEVICEPERLINE;
             intDebug(sema4[semIndex]);
             deviceReg->term.transm_command = ACK;
-            deviceReg->term.recv_command = ACK;
             status = deviceReg->term.transm_status;
         }
         else //the terminal is reading
@@ -147,13 +148,18 @@ void interruptHandler()
             intDebug(0x1234);
             insertProcQ(&(readyQueue), temp);
             intDebug(0x5678);
+            startTimeOfDay=getTODLO();
+            scheduler();
         }
+    }
+    else{
+        //save dev stat;
     }
         
     
     intDebug(0x9);
     startTimeOfDay = getTODLO();
-    loadState((state_t *)INT_OLD);
+    loadState(&(currentProc->p_s));
 
 }
 
@@ -166,7 +172,7 @@ HIDDEN int getDeviceNumber(int lineNum)
     bool found = FALSE;
 
     //set our bitmap to the proper line
-    unsigned int* bitMap = (unsigned int*)(INTMAP + ((lineNum-3) * DEVICEREGSIZE));
+    unsigned int* bitMap = (unsigned int*)(INTMAP + ((lineNum-3) * DEVICEREGLENG));
     
 
     while(!found)
@@ -193,8 +199,7 @@ HIDDEN int getDeviceNumber(int lineNum)
 HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex)
 {
     unsigned int registerLocation;
-    //registerLocation = DEVICEREGSTART+ (semIndex * DEVICEREGSIZE);
-    registerLocation = DEVICEREGSTART + (lineNum * LINEOFFSET) + (semIndex * DEVICEOFFSET);
-    intDebug(semIndex);
+    registerLocation = DEVICEREGSTART + (semIndex * DEVICEREGSIZE);
+    //registerLocation = DEVICEREGSTART + (lineNum * LINEOFFSET) + (semIndex * DEVICEOFFSET);
     return registerLocation;
 }

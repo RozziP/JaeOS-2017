@@ -25,7 +25,10 @@ HIDDEN void soft(){
     return;
 }
 
-HIDDEN void proc(){
+HIDDEN void procZero(){
+    return;
+}
+HIDDEN void newProcBreak(){
     return;
 }
 
@@ -40,7 +43,7 @@ void scheduler()
 
         if(procCount == 0)
         {
-            proc();
+            procZero();
             HALT();
         }
 
@@ -67,6 +70,7 @@ void scheduler()
         endTimeOfDay = 0;
         timeUsed = 0;
         timeLeft=QUANTUM;
+        newProcBreak();
 
         loadState(&(currentProc->p_s));
 

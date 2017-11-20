@@ -86,7 +86,8 @@
 #define INTMAP           0x00006FE0
 
 #define DEVICEREGSTART   0X00000040
-#define DEVICEREGSIZE    4
+#define DEVICEREGSIZE    16
+#define DEVICEREGLENG    4
 #define DEVICEPERLINE    8
 #define LINEOFFSET       0X80
 #define DEVICEOFFSET     0x10

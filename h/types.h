@@ -53,6 +53,13 @@ typedef struct semd_t
 }
 semd_t, *semd_PTR;
 
+typedef struct {
+	unsigned int d_status;
+	unsigned int d_command;
+	unsigned int d_data0;
+	unsigned int d_data1;
+} device_t;
+
 
 
 #endif
