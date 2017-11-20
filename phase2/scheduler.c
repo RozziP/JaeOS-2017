@@ -72,7 +72,7 @@ void scheduler()
         timeLeft=QUANTUM;
         newProcBreak();
 
-        loadState(&(currentProc->p_s));
+        loadState(&(currentProc -> p_s));
 
         
     }

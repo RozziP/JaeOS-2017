@@ -46,6 +46,7 @@ void sysCallHandler(){
     state_t* callingProc = (state_t*) SYS_OLD; //this is a re-declaration but everything breaks if i dont do it
     requestedSysCall = callingProc->a1;
 
+    copyState(callingProc, &(currentProc -> p_s));
 
     //Unauthorized access, shut it down
     
@@ -55,7 +56,7 @@ void sysCallHandler(){
 
         ((state_t*) PRGRM_OLD )-> CP15_Cause = RI;
 
-        passUpOrDie(SYSTRAP);
+        passUpOrDie(PRGRM_OLD);
 
     }
     //Direct to syscall
@@ -286,7 +287,6 @@ HIDDEN void sys8(state_t* callingProc){
     lineNumber = callingProc->a2;
     deviceNumber = callingProc->a3;
     isRead = callingProc->a4;
-
 
     //If the terminal is reading...
     if((lineNumber == TERMINAL) && isRead)
