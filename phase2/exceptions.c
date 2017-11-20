@@ -27,7 +27,7 @@ HIDDEN void passUpOrDie(int cause);
 int lineNumber;
 int deviceNumber;
 
-HIDDEN void pthB(){
+HIDDEN void schBreak(unsigned int x){
     return;
 }
 
@@ -181,9 +181,7 @@ HIDDEN void sys4(state_t* callingProc){
         //TODO keep track of elapsed time
 
         //something controls sem
-        pthB();
         insertBlocked(sem, currentProc);
-        pthB();
         scheduler();
     }
     //nothing controls sem
@@ -301,6 +299,7 @@ HIDDEN void sys8(state_t* callingProc){
     }
 
     sem = &(sema4[index]);
+    schBreak(index);
     *sem = *sem-1;
 
     if (*sem < 0){
