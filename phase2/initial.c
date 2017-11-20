@@ -91,10 +91,10 @@ void main()
 
     //Initialize the starting process
     pcb_PTR starter = allocPcb();
-    starter->p_s.sp   = (RAM_TOP - FRAME_SIZE); //changed from framesize
-    starter->p_s.pc   = (unsigned int)test;  //start by running test() in p2test.c
-    starter->p_s.cpsr = ALLOFF | SYSMODE;       //Interrupts on, kernel mode
-    starter->p_s.CP15_Control = ALLOFF;         //VM off
+    starter->p_s.sp   = (RAM_TOP - FRAME_SIZE); 
+    starter->p_s.pc   = (unsigned int)test; 
+    starter->p_s.cpsr = ALLOFF | SYSMODE;       
+    starter->p_s.CP15_Control = ALLOFF;         
     insertProcQ(&readyQueue, starter);
     procCount=1;
 

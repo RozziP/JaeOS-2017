@@ -27,10 +27,6 @@ HIDDEN void passUpOrDie(int cause);
 int lineNumber;
 int deviceNumber;
 
-HIDDEN void schBreak(unsigned int x){
-    return;
-}
-
 void tlbHandler()
 {
 
@@ -156,13 +152,18 @@ HIDDEN void sys3(state_t* callingProc){
         //unblock the process
         tempProc = removeBlocked(sem);
         
-        
+        //put on ready queue
+        tempProc -> p_semAdd = NULL;
+        insertProcQ(&readyQueue, tempProc);
+
+        /*
         if(tempProc != NULL)
         {
             //put on ready queue
             tempProc -> p_semAdd = NULL;
             insertProcQ(&readyQueue, tempProc);
         }
+        */
         //else nothing waiting
     }
 
@@ -299,7 +300,6 @@ HIDDEN void sys8(state_t* callingProc){
     }
 
     sem = &(sema4[index]);
-    schBreak(index);
     *sem = *sem-1;
 
     if (*sem < 0){
@@ -316,7 +316,7 @@ HIDDEN void sys8(state_t* callingProc){
         currentProc=NULL;
         scheduler();
     }
-    //currentProc -> p_s.a1 = sema4[]
+    //currentProc->p_s.a1 = currentProc -> p_s.a2;
     loadState(callingProc);
 }
 

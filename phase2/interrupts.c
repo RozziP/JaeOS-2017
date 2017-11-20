@@ -121,18 +121,6 @@ void interruptHandler()
         status = deviceReg -> dtp.status;
         deviceReg->dtp.command = ACK;
     }
-    /*
-    intDebug(0x333);
-    devreg_t* tempDevReg;
-    for (int line =0; line<8; line= line +1){
-        for (int device = 0; device <8; device=device+1){
-            tempDevReg = (devreg_t*) getDeviceRegister(line,device);
-            tempDevReg -> dtp .command = 1;
-            tempDevReg -> term.recv_command =1;
-        }
-    }
-    intDebug(0x666);
-    */
 
     //signal the device's semaphore
     sema4[semIndex] = sema4[semIndex] + 1;
@@ -151,9 +139,9 @@ void interruptHandler()
             startTimeOfDay=getTODLO();
             scheduler();
         }
-    }
-    else{
-        //save dev stat;
+        else{
+            //temp -> p_s.a2 = deviceReg -> dtp.status;
+        }
     }
         
     
@@ -195,11 +183,10 @@ HIDDEN int getDeviceNumber(int lineNum)
     return deviceNum;
 }
 
-//devAddrBase = 0x0000.0040 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10)
+
 HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex)
 {
     unsigned int registerLocation;
     registerLocation = DEVICEREGSTART + (semIndex * DEVICEREGSIZE);
-    //registerLocation = DEVICEREGSTART + (lineNum * LINEOFFSET) + (semIndex * DEVICEOFFSET);
     return registerLocation;
 }
