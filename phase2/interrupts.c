@@ -108,13 +108,14 @@ void interruptHandler()
             intDebug(sema4[semIndex]);
             semIndex = semIndex + DEVICEPERLINE;
             intDebug(sema4[semIndex]);
-            deviceReg->term.transm_command = ACK;
             status = deviceReg->term.transm_status;
+            deviceReg->term.transm_command = ACK;
+            
         }
         else //the terminal is reading
         {
-            deviceReg->term.recv_command = ACK;
             status = deviceReg->term.recv_status;
+            deviceReg->term.recv_command = ACK;
         }
     }
     else{

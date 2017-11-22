@@ -50,7 +50,7 @@ void sysCallHandler(){
 
     //Unauthorized access, shut it down
     
-    if((callingProc->cpsr & USRMODE)==0)
+    if((callingProc->cpsr & SYSMODE)==SYSMODE)
     {
         copyState((state_t*) SYS_OLD , (state_t*) PRGRM_OLD);
 
@@ -99,6 +99,7 @@ void sysCallHandler(){
     }
 
     //maybe pass up or die?
+    passUpOrDie(SYSTRAP);
 
     //Critical Failure
     PANIC();
@@ -155,17 +156,8 @@ HIDDEN void sys3(state_t* callingProc){
         
         //put on ready queue
         tempProc -> p_semAdd = NULL;
-        insertProcQ(&readyQueue, tempProc);
+        insertProcQ(&(readyQueue), tempProc);
 
-        /*
-        if(tempProc != NULL)
-        {
-            //put on ready queue
-            tempProc -> p_semAdd = NULL;
-            insertProcQ(&readyQueue, tempProc);
-        }
-        */
-        //else nothing waiting
     }
 
     //send back to caller
@@ -180,7 +172,11 @@ HIDDEN void sys4(state_t* callingProc){
 
     if(*sem < 0)
     {
-        //TODO keep track of elapsed time
+        //keep track of elapsed time
+        endTimeOfDay=getTODLO();
+        timeUsed = endTimeOfDay - startTimeOfDay;
+        currentProc->p_time = currentProc->p_time + timeUsed;
+        timeLeft = timeLeft - timeUsed;
 
         //something controls sem
         insertBlocked(sem, currentProc);
@@ -301,6 +297,7 @@ HIDDEN void sys8(state_t* callingProc){
 
     sem = &(sema4[index]);
     *sem = *sem-1;
+    //sema4[index]=sema4[index]-1;
 
     if (*sem < 0){
 
@@ -310,6 +307,7 @@ HIDDEN void sys8(state_t* callingProc){
         //Save the time used since last recording
         timeUsed = endTimeOfDay - startTimeOfDay;
         currentProc -> p_time = currentProc -> p_time + timeUsed;
+        timeLeft=timeLeft - timeUsed;
 
         insertBlocked(sem, currentProc);
         softBlockCnt++;
