@@ -1,7 +1,24 @@
-/*
-exceptions.c
+/*==========================================================================*\
+  exceptions.c
 
-*/
+  Contains functions to handle program traps, TLB traps, and system calls in the OS
+  
+  Syscalls 1-8 are only handled if the calling state is in system mode, otherwise
+  we treat the call as a program trap
+  Syscalls above 8 are killed.
+
+  Sys1: Creates a new process and makes it a child of the current process
+  Sys2: Recursively kills the given process and all of its children
+  Sys3: Verhogen. Signals the semaphore of the current process
+  Sys4: Passeren. Caused the current process to wait on its semaphore
+  Sys5: Sets up secondary exception handlers
+  Sys6: Returns the time used by the current process
+  Sys7: Performs a wait operation on the clock's semaphore
+  Sys8: Performs a wait operaton on a device semaphore
+
+  Authors: Peter Rozzi and Patrick Gemperline
+  Date: 11-23-17
+\*==========================================================================*/
 
 #include "../e/asl.e"
 #include "../e/pcb.e"
@@ -27,18 +44,29 @@ HIDDEN void passUpOrDie(int cause);
 int lineNumber;
 int deviceNumber;
 
+/*
+*Pass up a TLB trap to it's secondary exception vector.
+*If it has no secondary exception vector, it is killed.
+*/
 void tlbHandler()
 {
-
     passUpOrDie(TLBTRAP);
-    
 }
 
+/*
+*Pass up a program trap to it's secondary exception vector.
+*If it has no secondary exception vector, it is killed.
+*/
 void prgrmTrapHandler()
 {
     passUpOrDie(PRGRMTRAP);
 }
 
+/*
+*Calls a different function based on the requested syscall
+*If syscalls 1-8 were called in user mode, triggers a program trap
+*if syscalls 9-255 were called at all, triggers a sys trap
+*/
 void sysCallHandler(){
     state_t* program;
     int requestedSysCall; 
@@ -106,6 +134,12 @@ void sysCallHandler(){
 
 }
 
+/*
+ * Attempts to allocate a new PCB.
+ * If there are no free PCBs, we return a failure code
+ * Otherwise, we make the new PCB a child of the current process, 
+ * put it on the ready queue, and return a success code.
+ */
 HIDDEN void sys1(state_t* callingProc){
 
     pcb_PTR newPCB = allocPcb();
@@ -132,7 +166,10 @@ HIDDEN void sys1(state_t* callingProc){
 }
 
 
-
+/*
+ * Kills the current process and all of its children
+ * then calls the scheduler
+ */
 HIDDEN void sys2(){
     //end the bloodline
     killAllChildren(currentProc);

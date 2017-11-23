@@ -1,10 +1,10 @@
 /*==========================================================================*\
   initial.c
-  Contains the initialization function for the OS
+  Contains the initialization function for the OS, and OS-wide helper functions
   Initializes the ASL and all PCBs, global variables, new handler areas, and
   device semaphores.
   
-  Then, creates the initial process, sets the timer, and calls the scheduler.
+  Then, creates the initial process and calls the scheduler.
   
   Authors: Peter Rozzi and Patrick Gemperline
   Date: 10-24-17
@@ -38,6 +38,11 @@ cput_t endTimeOfDay;
 cput_t timeUsed;
 cput_t timeLeft;
 
+/*
+*Boot function for the OS
+*Initiliazrs PCBs, ASL, and new areas
+*It then creates a process and calls the scheduler to start the OS
+*/
 void main()
 {
     state_t* newArea;
@@ -112,6 +117,9 @@ void loadState(state_t* stateToLoad)
     LDST(stateToLoad);
 }
 
+/*
+*Copies all regsisters in the first parameter state into the second parameter state
+*/
 void copyState(state_t* src, state_t* dest)
 {   
     dest->a1 = src->a1;

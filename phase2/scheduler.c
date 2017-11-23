@@ -31,7 +31,13 @@ HIDDEN void procZero(){
 HIDDEN void newProcBreak(){
     return;
 }
-
+/*
+*Takes a new job from the ready queue and runs it.
+*if there are no jobs on the readyqueue and we have nothing to run, the CPU halts
+*if nothing is blocked by I/O, we panic
+*if there are processes blocked by I/O, we wait
+*Otherwise, we initialize the new process' time fields and load its state
+*/
 void scheduler()
 {   
     //If there was a process running, do something with its time slice
