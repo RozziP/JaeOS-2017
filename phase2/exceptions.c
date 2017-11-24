@@ -178,7 +178,11 @@ HIDDEN void sys2(){
     scheduler();
 }
 
-
+/*
+ * Signal the semaphore that the current process is blocked on. 
+ * If the semaphore is less than or equal to 0, unblock a process,
+ * add it to the ready queue and then return to the current process
+ */
 HIDDEN void sys3(state_t* callingProc){
 
     pcb_PTR tempProc = NULL;
@@ -202,7 +206,12 @@ HIDDEN void sys3(state_t* callingProc){
 }
 
 
-
+/*
+ * Perform a wait on the current process' semaphore.
+ * if the semaphore is less than 0, store the time used by the process,
+ * block the process, then call the scheduler.
+ * otherwise, return to the current process.
+ */
 HIDDEN void sys4(state_t* callingProc){
     int* sem = (int*)callingProc->a2;
     *sem = *sem-1;
@@ -224,6 +233,9 @@ HIDDEN void sys4(state_t* callingProc){
 
 }
 
+/*
+ * Replaces an exception handler state with a custom, parameterized state
+ */
 HIDDEN void sys5(state_t* callingProc)
 {
     switch(callingProc->a2)
@@ -259,7 +271,9 @@ HIDDEN void sys5(state_t* callingProc)
 }
 
 
-
+/*
+ * Returns the CPU time that the current process has used sine its birth
+ */
 HIDDEN void sys6(state_t* callingProc)
 {
     //get current time
@@ -357,7 +371,10 @@ HIDDEN void sys8(state_t* callingProc){
 
 
 
-
+/*
+ * Sys2 helper function. 
+ * Recursively deletes a node and all of its children
+ */
 HIDDEN void killAllChildren(pcb_PTR top)
 {
    while(!emptyChild(top))
@@ -400,7 +417,11 @@ HIDDEN void killAllChildren(pcb_PTR top)
    freePcb(top);
 }
 
-
+/*
+ * Passes an exception to its appropriate handler defined by Sys5
+ * if Sys5 was not called for the given exception type, kill the current
+ * process and all of its children.
+ */
 HIDDEN void passUpOrDie(int cause){
 
     switch(cause){
