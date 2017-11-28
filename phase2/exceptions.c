@@ -391,11 +391,12 @@ HIDDEN void sys8(){
  */
 HIDDEN void killAllChildren(pcb_PTR top)
 {
+   int* sem = top->p_semAdd;
    while(!emptyChild(top))
    {
        //drink the punch
        killAllChildren(removeChild(top));
-   }
+}
 
    //is our node the current process?
    if(top == currentProc)
@@ -403,31 +404,31 @@ HIDDEN void killAllChildren(pcb_PTR top)
         outChild(top); //not anymore
    }
    //if not, then it's on the readyqueue
-   else if(top->p_semAdd == NULL){
-		outProcQ(&(readyQueue), top);
-	}
-
-   //remove the node from any semaphores
-   else
+   else if(sem == NULL)
    {
-        int* sem = top->p_semAdd;
-        outBlocked(top);
+        outProcQ(&(readyQueue), top);
+   }
 
+   
+   else //remove the node from any semaphores
+   {
+        outBlocked(top);
         //is it on a device semaphore?
-        if(sem >= &(sema4[0]) && sem <= &(sema4[DEVICES-1]))
+        if((sem >= &(sema4[0])) && (sem <= &(sema4[DEVICES-1])))
         {
             softBlockCnt--; //not anymore
         }
         //else, it's not softblocked
         else
         {
-            *sem=*sem+1;
+            *sem = *sem+1;
         }
    }
 
    //RIP
-   procCount=procCount-1;
    freePcb(top);
+   procCount = procCount-1;
+   
 }
 
 /*
