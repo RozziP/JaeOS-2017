@@ -8,6 +8,7 @@ initial.e
 extern int procCount;
 extern int softBlockCnt;
 extern int sema4[DEVICES];
+extern int semaStat[DEVICES];
 extern pcb_PTR currentProc;
 extern pcb_PTR readyQueue;
 
@@ -16,6 +17,7 @@ extern cput_t startTimeOfDay;
 extern cput_t endTimeOfDay;
 extern cput_t timeUsed;
 extern cput_t timeLeft;
+extern cput_t endOfInterval;
 
 
 extern void initAreasBreak();

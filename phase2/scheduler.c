@@ -17,7 +17,7 @@
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
 
-HIDDEN void wait(){
+HIDDEN void wait(unsigned int x){
     return;
 }
 
@@ -32,10 +32,13 @@ HIDDEN void newProcBreak(){
     return;
 }
 
+HIDDEN void currentProcCount(unsigned int x){
+    return;
+}
+
 void scheduler()
 {   
-    //If there was a process running, do something with its time slice
-    //we havent decided what time stuff to do yet
+    currentProcCount(procCount);
 
     if(emptyProcQ(readyQueue))
     {
@@ -55,27 +58,39 @@ void scheduler()
 
         else
         {
-            setTIMER(QUANTUM);
-            wait();
+            setTIMER(endOfInterval-getTODLO());
+            wait(softBlockCnt);
+            wait(procCount);
+            
             setSTATUS((getSTATUS() & INTS_ON) | SYSMODE);
-            wait();
+            wait(0);
             WAIT();
         }
 
     }
-    else //there are ready processes
-    {
-        currentProc = removeProcQ(&readyQueue);
-        startTimeOfDay = getTODLO();
-        endTimeOfDay = 0;
-        timeUsed = 0;
-        timeLeft=QUANTUM;
-        newProcBreak();
+     //there are ready processes
+    
+    currentProc = removeProcQ(&readyQueue);
+    
+    /*If there is less than than one quantum left on the clock...*/
+    if((endOfInterval - getTODLO()) < QUANTUM){			
+        
+        /*Set the new job's timer to be the remaining interval time*/
+        setTIMER(endOfInterval-getTODLO());
+    }
+    else{
+        /*Set the new job's timer to be a full quantum*/
+        setTIMER(QUANTUM);
+    }
+    
+    newProcBreak();
 
-        loadState(&(currentProc -> p_s));
+    startTimeOfDay = getTODLO();
+
+    loadState(&(currentProc -> p_s));
 
         
-    }
+    
     
         
 }

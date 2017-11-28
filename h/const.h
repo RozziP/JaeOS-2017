@@ -97,6 +97,7 @@
 #define READY           1
 #define RI              20
 
+#define INT_TIME        100000
 
 
 

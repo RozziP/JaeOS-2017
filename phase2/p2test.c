@@ -30,6 +30,10 @@
 /* fin editing */
 
 
+void testBreak(unsigned int x, unsigned int y, unsigned int z){
+	return;
+}
+
 #define ALLOFF				0x00000000
 #define INTSDISABLED		0x000000C0
 
@@ -332,8 +336,10 @@ void p2() {
 	cpu_t1 = SYSCALL(GETCPUTIME, 0, 0, 0);			/* CPU time used */
 
 	/* delay for several milliseconds */
-	for (i=1; i < LOOPNUM; i++)
-		;
+	int j;
+	for (i=1; i < LOOPNUM; i++){
+		j=j+i;
+	}
 
 	cpu_t2 = SYSCALL(GETCPUTIME, 0, 0, 0);			/* CPU time used */
 	now2 = getTODLO();				/* time of day  */
@@ -354,6 +360,7 @@ void p2() {
 
 	SYSCALL(VERHOGEN, (int)&endp2, 0, 0);				/* V(endp2)     */
 
+	
 	SYSCALL(TERMINATETHREAD, 0, 0, 0);			/* terminate p2 */
 
 	/* just did a SYS2, so should not get to this point */
@@ -441,6 +448,10 @@ void p4() {
 	print("p4 is OK\n");
 
 	SYSCALL(VERHOGEN, (int)&endp4, 0, 0);				/* V(endp4)          */
+
+	print ("verhogened good\n");
+
+	testBreak(0x0,0,0);
 
 	SYSCALL(TERMINATETHREAD, 0, 0, 0);			/* terminate p4      */
 

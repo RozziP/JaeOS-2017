@@ -31,12 +31,12 @@ void initAreasBreak(){
 int procCount;
 int softBlockCnt;
 int sema4[DEVICES];
+int semaStat[DEVICES];
 pcb_PTR currentProc;
 pcb_PTR readyQueue;
-cput_t startTimeOfDay;
-cput_t endTimeOfDay;
-cput_t timeUsed;
-cput_t timeLeft;
+cput_t startTimeOfDay = 0;
+cput_t endOfInterval;
+int timerFlag;
 
 void main()
 {
@@ -97,6 +97,10 @@ void main()
     starter->p_s.CP15_Control = ALLOFF;         
     insertProcQ(&readyQueue, starter);
     procCount=1;
+
+    endOfInterval = getTODLO() + INT_TIME;
+    setTIMER(QUANTUM);
+    
 
     //off to see the wizard
     scheduler();

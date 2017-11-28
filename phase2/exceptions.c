@@ -18,7 +18,7 @@ HIDDEN void sys2();
 HIDDEN void sys3(state_t* callingProc);
 HIDDEN void sys4(state_t* callingProc);
 HIDDEN void sys5(state_t* callingProc);
-HIDDEN void sys6(state_t* callingProc);
+HIDDEN void sys6();
 HIDDEN void sys7(state_t* callingProc);
 HIDDEN void sys8(state_t* callingProc);
 HIDDEN void killAllChildren(pcb_PTR top);
@@ -26,6 +26,13 @@ HIDDEN void passUpOrDie(int cause);
 
 int lineNumber;
 int deviceNumber;
+
+cput_t endTimeOfDay;
+cput_t timeUsed;
+
+HIDDEN void exBreak(unsigned int x){
+    return;
+}
 
 void tlbHandler()
 {
@@ -43,18 +50,22 @@ void sysCallHandler(){
     state_t* program;
     int requestedSysCall; 
     
-    state_t* callingProc = (state_t*) SYS_OLD; //this is a re-declaration but everything breaks if i dont do it
-    requestedSysCall = callingProc->a1;
+    state_t* callingProc = (state_t*) SYS_OLD; 
+    
 
-    copyState(callingProc, &(currentProc -> p_s));
+    copyState((state_t*) SYS_OLD, &(currentProc -> p_s));
+
+    requestedSysCall = currentProc->p_s.a1;
 
     //Unauthorized access, shut it down
     
-    if((callingProc->cpsr & SYSMODE)==SYSMODE)
+    if((callingProc->cpsr & SYSMODE)!=SYSMODE)
     {
         copyState((state_t*) SYS_OLD , (state_t*) PRGRM_OLD);
 
         ((state_t*) PRGRM_OLD )-> CP15_Cause = RI;
+
+        exBreak(0x800000);
 
         passUpOrDie(PRGRM_OLD);
 
@@ -94,11 +105,12 @@ void sysCallHandler(){
         break;
 
         default: //everything else
+            exBreak(0x900000);
             passUpOrDie(SYSTRAP);
         break;
     }
 
-    //maybe pass up or die?
+    
     passUpOrDie(SYSTRAP);
 
     //Critical Failure
@@ -119,7 +131,7 @@ HIDDEN void sys1(state_t* callingProc){
     {
         callingProc->a1 = SUCCESS;
 
-        ++procCount;
+        procCount=procCount+1;
 
         //Make new process a progeny of the callingProcess
         insertChild(currentProc, newPCB);
@@ -136,7 +148,11 @@ HIDDEN void sys1(state_t* callingProc){
 
 HIDDEN void sys2(){
     //end the bloodline
+    exBreak(procCount);
+    exBreak(softBlockCnt);
     killAllChildren(currentProc);
+    exBreak(procCount);
+    exBreak(softBlockCnt);
     currentProc=NULL;
     scheduler();
 }
@@ -157,6 +173,8 @@ HIDDEN void sys3(state_t* callingProc){
         //put on ready queue
         tempProc -> p_semAdd = NULL;
         insertProcQ(&(readyQueue), tempProc);
+        softBlockCnt=softBlockCnt-1;
+        endTimeOfDay=getTODLO();
 
     }
 
@@ -176,10 +194,10 @@ HIDDEN void sys4(state_t* callingProc){
         endTimeOfDay=getTODLO();
         timeUsed = endTimeOfDay - startTimeOfDay;
         currentProc->p_time = currentProc->p_time + timeUsed;
-        timeLeft = timeLeft - timeUsed;
 
         //something controls sem
         insertBlocked(sem, currentProc);
+        softBlockCnt=softBlockCnt+1;
         scheduler();
     }
     //nothing controls sem
@@ -194,7 +212,7 @@ HIDDEN void sys5(state_t* callingProc)
         case TLBTRAP:
             if(currentProc->tlbNew != NULL)
             {
-                killAllChildren(currentProc); //already called this once
+                sys2(currentProc); //already called this once
             }
             currentProc->sysCallNew=(state_t*)callingProc->a4;
             currentProc->sysCallOld=(state_t*)callingProc->a3;
@@ -203,7 +221,7 @@ HIDDEN void sys5(state_t* callingProc)
         case PRGRMTRAP: 
             if(currentProc->prgrmTrapNew != NULL)
             {
-                killAllChildren(currentProc); //already called this once
+                sys2(currentProc); //already called this once
             }
             currentProc->prgrmTrapNew = (state_t*)callingProc->a4;
             currentProc->prgrmTrapOld = (state_t*)callingProc->a3;
@@ -212,7 +230,7 @@ HIDDEN void sys5(state_t* callingProc)
         case SYSTRAP: 
             if(currentProc-> sysCallNew != NULL)
             {
-                killAllChildren(currentProc); //already called this once
+                sys2(currentProc); //already called this once
             }
             currentProc->tlbNew=(state_t*) callingProc -> a4;
             currentProc->tlbOld=(state_t*) callingProc -> a3;
@@ -223,22 +241,23 @@ HIDDEN void sys5(state_t* callingProc)
 
 
 
-HIDDEN void sys6(state_t* callingProc)
+HIDDEN void sys6()
 {
     //get current time
     endTimeOfDay = getTODLO();
     
     //calculate and save the time that has been used
     timeUsed = endTimeOfDay - startTimeOfDay;
+
     currentProc->p_time = currentProc->p_time + timeUsed;
     
     //return resulting process time		
     currentProc->p_s.a1 = currentProc->p_time;
 
-    startTimeOfDay = getTODLO();
+    startTimeOfDay = endTimeOfDay;
     
     //return the to process
-    loadState((state_t*)SYS_OLD);
+    loadState(&(currentProc->p_s));
 }
 
 
@@ -259,7 +278,6 @@ HIDDEN void sys7(state_t* callingProc)
         //Store elapsed time
         timeUsed = endTimeOfDay - startTimeOfDay;
         currentProc -> p_time = currentProc -> p_time + timeUsed;
-        timeLeft = timeLeft - timeUsed;
         
         //Block the process
         insertBlocked(&(sema4[clockSem]), currentProc);
@@ -290,14 +308,11 @@ HIDDEN void sys8(state_t* callingProc){
         index = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber;
     }
     //else the terminal is writing so add 8 to get the terminal device
-    else
-    {
-        index = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber + DEVICEPERLINE;
-    }
+    index = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber + DEVICEPERLINE;
+
 
     sem = &(sema4[index]);
     *sem = *sem-1;
-    //sema4[index]=sema4[index]-1;
 
     if (*sem < 0){
 
@@ -307,14 +322,13 @@ HIDDEN void sys8(state_t* callingProc){
         //Save the time used since last recording
         timeUsed = endTimeOfDay - startTimeOfDay;
         currentProc -> p_time = currentProc -> p_time + timeUsed;
-        timeLeft=timeLeft - timeUsed;
 
         insertBlocked(sem, currentProc);
         softBlockCnt++;
         currentProc=NULL;
         scheduler();
     }
-    //currentProc->p_s.a1 = currentProc -> p_s.a2;
+    currentProc->p_s.a1 = semaStat[index];
     loadState(callingProc);
 }
 
@@ -332,16 +346,15 @@ HIDDEN void killAllChildren(pcb_PTR top)
    //is our node the current process?
    if(top == currentProc)
    {
-        outChild(currentProc); //not anymore
+        outChild(top); //not anymore
    }
    //if not, then it's on the readyqueue
-   else
-   {
-        outProcQ(&readyQueue, top);
-   }
+   else if(top->p_semAdd == NULL){
+		outProcQ(&(readyQueue), top);
+	}
 
    //remove the node from any semaphores
-   if(top->p_semAdd != NULL)
+   else
    {
         int* sem = top->p_semAdd;
         outBlocked(top);
@@ -354,12 +367,12 @@ HIDDEN void killAllChildren(pcb_PTR top)
         //else, it's not softblocked
         else
         {
-            *sem++;
+            *sem=*sem+1;
         }
    }
 
    //RIP
-   --procCount;
+   procCount=procCount-1;
    freePcb(top);
 }
 
@@ -395,7 +408,7 @@ HIDDEN void passUpOrDie(int cause){
     }
     
     //there was no handler to pass up to... guess I'll die.
-    killAllChildren(currentProc);
+    sys2();
 }
 
 
