@@ -36,6 +36,13 @@ HIDDEN void currentProcCount(unsigned int x){
     return;
 }
 
+/*
+*Takes a new job from the ready queue and runs it.
+*if there are no jobs on the readyqueue and we have nothing to run, the CPU halts
+*if nothing is blocked by I/O, we panic
+*if there are processes blocked by I/O, we wait
+*Otherwise, we initialize the new process' time fields and load its state
+*/
 void scheduler()
 {   
     currentProcCount(procCount);

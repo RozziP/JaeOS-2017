@@ -1,7 +1,17 @@
-/*
-interrupts.c
+/*==========================================================================*\
+  interrupts.c
 
-*/
+  Contains functions to handle device and clock interrupts in the OS.
+
+  Interval timer interrupts occur when a process' timer runs out, they are
+  handled by reseting the timer and putting the process back on the ready queue.
+
+  Device interrupts are handled by signalling the device's semaphore and
+  unblocking a process from it.
+
+  Authors: Peter Rozzi and Patrick Gemperline
+  Date: 11-23-17
+\*==========================================================================*/
 #include "../e/asl.e"
 #include "../e/pcb.e"
 #include "../e/initial.e"
@@ -175,7 +185,11 @@ void interruptHandler()
 }
 
 
-
+/*
+ * Looks through each bit of the given device line
+ * to determine which device caused the interrupt.
+ * Returns -1 if the device is not found.
+ */
 HIDDEN int getDeviceNumber(int lineNum)
 {
     unsigned int deviceNum = 0;
@@ -206,7 +220,9 @@ HIDDEN int getDeviceNumber(int lineNum)
     return deviceNum;
 }
 
-
+/*
+ * Uses a magic formula to find the location of the given device's registers
+ */
 HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex)
 {
     unsigned int registerLocation;
