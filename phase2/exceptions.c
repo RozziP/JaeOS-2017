@@ -396,21 +396,8 @@ HIDDEN void killAllChildren(pcb_PTR top)
    {
        //drink the punch
        killAllChildren(removeChild(top));
-}
-
-   //is our node the current process?
-   if(top == currentProc)
-   {
-        outChild(top); //not anymore
    }
-   //if not, then it's on the readyqueue
-   else if(sem == NULL)
-   {
-        outProcQ(&(readyQueue), top);
-   }
-
-   
-   else //remove the node from any semaphores
+   if(sem != NULL) //remove the node from any semaphores
    {
         outBlocked(top);
         //is it on a device semaphore?
@@ -418,11 +405,18 @@ HIDDEN void killAllChildren(pcb_PTR top)
         {
             softBlockCnt--; //not anymore
         }
-        //else, it's not softblocked
-        else
+        else //it's not softblocked
         {
             *sem = *sem+1;
         }
+   }
+   else if(top == currentProc) //is our node the current process?
+   {
+        outChild(top); //not anymore
+   }
+   else //then it's on the readyqueue
+   {
+        outProcQ(&(readyQueue), top);
    }
 
    //RIP

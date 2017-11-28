@@ -40,7 +40,7 @@ int timerFlag;
 
 /*
 *Boot function for the OS
-*Initiliazrs PCBs, ASL, and new areas
+*Initiliazes PCBs, ASL, and new areas
 *It then creates a process and calls the scheduler to start the OS
 */
 void main()
