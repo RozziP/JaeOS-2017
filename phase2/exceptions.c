@@ -174,7 +174,7 @@ HIDDEN void sys1(state_t* callingProc){
 HIDDEN void sys2(){
     //end the bloodline
     killAllChildren(currentProc);
-    currentProc=NULL;
+    currentProc = NULL;
     scheduler();
 }
 

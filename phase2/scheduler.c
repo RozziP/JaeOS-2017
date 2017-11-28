@@ -72,13 +72,12 @@ void scheduler()
     else //there are ready processes
     {
         currentProc = removeProcQ(&readyQueue);
+
         startTimeOfDay = getTODLO();
-        endTimeOfDay = 0;
-        timeUsed = 0;
-        timeLeft=QUANTUM;
+        setTimer(QUANTUM);
         newProcBreak();
 
-        loadState(&(currentProc -> p_s));
+        loadState(&(currentProc->p_s));
 
         
     }
