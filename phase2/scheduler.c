@@ -79,14 +79,14 @@ void scheduler()
     
     currentProc = removeProcQ(&readyQueue);
     
-    /*If there is less than than one quantum left on the clock...*/
+   
     if((endOfInterval - getTODLO()) < QUANTUM){			
         
-        /*Set the new job's timer to be the remaining interval time*/
+       
         setTIMER(endOfInterval-getTODLO());
     }
     else{
-        /*Set the new job's timer to be a full quantum*/
+        
         setTIMER(QUANTUM);
     }
     

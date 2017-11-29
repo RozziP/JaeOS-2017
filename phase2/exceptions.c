@@ -290,7 +290,7 @@ HIDDEN void sys5()
 
 
 /*
- * Returns the CPU time that the current process has used sine its birth
+ * Returns the CPU time that the current process has used since its birth
  */
 HIDDEN void sys6()
 {
