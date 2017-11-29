@@ -438,7 +438,7 @@ HIDDEN void passUpOrDie(int cause){
                 //systrap called
                 copyState((state_t*)SYS_OLD, (state_t*)currentProc->sysCallOld);
                 copyState((state_t*)sysCallNew, &(currentProc->p_s));
-                loadState(currentProc->sysCallNew);
+                loadState(&(currentProc->p_s));
             }
         break;
         case PRGRMTRAP:  
@@ -446,7 +446,7 @@ HIDDEN void passUpOrDie(int cause){
                 //prgrmTrap called
                 copyState((state_t*)PRGRM_OLD, (state_t*)currentProc->prgrmTrapOld);
                 copyState((state_t*)prgrmTrapNew,  &(currentProc->p_s));
-                loadState(currentProc->prgrmTrapNew);
+                loadState(&(currentProc->p_s));
             }
         break;
         case TLBTRAP:  
@@ -455,7 +455,7 @@ HIDDEN void passUpOrDie(int cause){
                 //tlbTrap called
                 copyState((state_t*)TLB_OLD, (state_t*)currentProc->tlbOld);
                 copyState((state_t*)tlbNew,  &(currentProc->p_s));
-                loadState(currentProc->tlbNew);
+                loadState(&(currentProc->p_s));
             }
         break;
     }
