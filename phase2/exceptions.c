@@ -256,33 +256,34 @@ HIDDEN void sys4(){
  */
 HIDDEN void sys5()
 {
+    exBreak(currentProc->p_s.a2);
     switch(currentProc->p_s.a2)
     {
-        case TLBTRAP:
-            if(currentProc->tlbNew != NULL)
+        case SYSTRAP:
+            if((currentProc->sysCallNew) != NULL)
             {
-                sys2(currentProc); //already called this once
+                sys2(); //already called this once
             }
-            currentProc->sysCallNew=(state_t*)currentProc->p_s.a4;
-            currentProc->sysCallOld=(state_t*)currentProc->p_s.a3;
+            currentProc->sysCallNew = (state_t*)currentProc->p_s.a4;
+            currentProc->sysCallOld = (state_t*)currentProc->p_s.a3;
             break;
 
         case PRGRMTRAP: 
-            if(currentProc->prgrmTrapNew != NULL)
+            if((currentProc->prgrmTrapNew) != NULL)
             {
-                sys2(currentProc); //already called this once
+                sys2(); //already called this once
             }
             currentProc->prgrmTrapNew = (state_t*)currentProc->p_s.a4;
             currentProc->prgrmTrapOld = (state_t*)currentProc->p_s.a3;
             break;
 
-        case SYSTRAP: 
-            if(currentProc-> sysCallNew != NULL)
+        case TLBTRAP: 
+            if((currentProc-> tlbNew) != NULL)
             {
-                sys2(currentProc); //already called this once
+                sys2(); //already called this once
             }
-            currentProc->tlbNew=(state_t*) currentProc->p_s.a4;
-            currentProc->tlbOld=(state_t*) currentProc->p_s.a3;
+            currentProc->tlbNew = (state_t*)currentProc->p_s.a4;
+            currentProc->tlbOld = (state_t*)currentProc->p_s.a3;
             break;
     }
     loadState(&(currentProc->p_s));
@@ -396,21 +397,8 @@ HIDDEN void killAllChildren(pcb_PTR top)
    {
        //drink the punch
        killAllChildren(removeChild(top));
-}
-
-   //is our node the current process?
-   if(top == currentProc)
-   {
-        outChild(top); //not anymore
    }
-   //if not, then it's on the readyqueue
-   else if(sem == NULL)
-   {
-        outProcQ(&(readyQueue), top);
-   }
-
-   
-   else //remove the node from any semaphores
+   if(sem != NULL) //remove the node from any semaphores
    {
         outBlocked(top);
         //is it on a device semaphore?
@@ -418,11 +406,18 @@ HIDDEN void killAllChildren(pcb_PTR top)
         {
             softBlockCnt--; //not anymore
         }
-        //else, it's not softblocked
-        else
+        else //it's not softblocked
         {
             *sem = *sem+1;
         }
+   }
+   else if(top == currentProc) //is our node the current process?
+   {
+        outChild(top); //not anymore
+   }
+   else //then it's on the readyqueue
+   {
+        outProcQ(&(readyQueue), top);
    }
 
    //RIP
@@ -442,26 +437,26 @@ HIDDEN void passUpOrDie(int cause){
         case SYSTRAP:  
             if(currentProc->sysCallOld != NULL){
                 //systrap called
-                copyState((state_t*)SYS_OLD, (state_t*) currentProc->sysCallOld);
-                copyState((state_t*) SYS_NEW, &currentProc -> p_s);
-                loadState(currentProc->sysCallNew);
+                copyState((state_t*)SYS_OLD, (state_t*)currentProc->sysCallOld);
+                copyState(currentProc->sysCallNew, &(currentProc->p_s));
+                loadState(&(currentProc->p_s));
             }
         break;
         case PRGRMTRAP:  
             if(currentProc->prgrmTrapOld != NULL){
                 //prgrmTrap called
-                copyState((state_t*) PRGRM_OLD, (state_t*) currentProc->prgrmTrapOld);
-                copyState((state_t*) PRGRM_NEW,  &currentProc -> p_s);
-                loadState(currentProc->prgrmTrapNew);
+                copyState((state_t*)PRGRM_OLD, (state_t*)currentProc->prgrmTrapOld);
+                copyState(currentProc->prgrmTrapNew,  &(currentProc->p_s));
+                loadState(&(currentProc->p_s));
             }
         break;
         case TLBTRAP:  
             if(currentProc -> tlbOld != NULL)
             {
                 //tlbTrap called
-                copyState((state_t*) TLB_OLD, (state_t*) currentProc->tlbOld);
-                copyState((state_t*) TLB_NEW,  &currentProc -> p_s);
-                loadState(currentProc->tlbNew);
+                copyState((state_t*)TLB_OLD, (state_t*)currentProc->tlbOld);
+                copyState(currentProc->tlbNew,  &(currentProc->p_s));
+                loadState(&(currentProc->p_s));
             }
         break;
     }
