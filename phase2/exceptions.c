@@ -86,63 +86,62 @@ void sysCallHandler(){
     requestedSysCall = currentProc->p_s.a1;
 
     //Unauthorized access, shut it down
-    
-    if((callingProc->cpsr & SYSMODE)!=SYSMODE)
+    if((callingProc->cpsr & SYSMODE)!= SYSMODE)
     {
-        copyState((state_t*) SYS_OLD , (state_t*) PRGRM_OLD);
+        //Direct to syscall
+        switch(requestedSysCall)
+        {
+            case BIRTH:
+                sys1(callingProc);
+            break;
 
-        ((state_t*) PRGRM_OLD )-> CP15_Cause = RI;
+            case DEATH:
+                sys2();
+            break;
+
+            case VERHOGEN:
+                sys3(callingProc);
+            break; 
+
+            case PASSEREN:
+                sys4(callingProc);
+            break;
+
+            case ESV:
+                sys5(callingProc);
+            break;
+
+            case CPUTIME:
+                sys6(callingProc);
+            break;
+
+            case CLOCKWAIT:
+                sys7(callingProc);
+            break;
+
+            case IOWAIT:
+                sys8(callingProc);
+            break;
+
+            default: //everything else
+                exBreak(0x900000);
+                passUpOrDie(SYSTRAP);
+            break;
+        }
+    }
+
+    //if any of the syscalls 1-8 were called in user mode
+    if((requestedSysCall >= BIRTH) && (requestedSysCall <= IOWAIT))
+    {
+        copyState((state_t*) SYS_OLD, (state_t*) PRGRM_OLD);
+        ((state_t*)PRGRM_OLD )-> CP15_Cause = RI;
 
         exBreak(0x800000);
-
-        passUpOrDie(PRGRM_OLD);
-
-    }
-    //Direct to syscall
-    switch(requestedSysCall){
-        case BIRTH:
-            sys1(callingProc);
-        break;
-
-        case DEATH:
-            sys2();
-        break;
-
-        case VERHOGEN:
-            sys3(callingProc);
-        break; 
-
-        case PASSEREN:
-            sys4(callingProc);
-        break;
-
-        case ESV:
-            sys5(callingProc);
-        break;
-
-        case CPUTIME:
-            sys6(callingProc);
-        break;
-
-        case CLOCKWAIT:
-            sys7(callingProc);
-        break;
-
-        case IOWAIT:
-            sys8(callingProc);
-        break;
-
-        default: //everything else
-            exBreak(0x900000);
-            passUpOrDie(SYSTRAP);
-        break;
+        prgrmTrapHandler();
     }
 
-    
+    //it was a syscall above 8 and we don't do those
     passUpOrDie(SYSTRAP);
-
-    //Critical Failure
-    PANIC();
 
 
 }
