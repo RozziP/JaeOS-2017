@@ -92,7 +92,7 @@ void sysCallHandler(){
         switch(requestedSysCall)
         {
             case BIRTH:
-                sys1(callingProc);
+                sys1();
             break;
 
             case DEATH:
@@ -100,27 +100,27 @@ void sysCallHandler(){
             break;
 
             case VERHOGEN:
-                sys3(callingProc);
+                sys3();
             break; 
 
             case PASSEREN:
-                sys4(callingProc);
+                sys4();
             break;
 
             case ESV:
-                sys5(callingProc);
+                sys5();
             break;
 
             case CPUTIME:
-                sys6(callingProc);
+                sys6();
             break;
 
             case CLOCKWAIT:
-                sys7(callingProc);
+                sys7();
             break;
 
             case IOWAIT:
-                sys8(callingProc);
+                sys8();
             break;
 
             default: //everything else
