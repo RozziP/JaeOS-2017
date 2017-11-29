@@ -546,7 +546,10 @@ void p5a() {
 void p5b() {
 	cpu_t		time1, time2;
 
+	testBreak(procCount, 1, 0);
 	SYSCALL(9, 0, 0, 0);
+
+	testBreak(procCount,0,0);
 	/* the first time through, we are in user mode */
 	/* and the P should generate a program trap */
 	SYSCALL(PASSERN, (int)&endp4, 0, 0);			/* P(endp4)*/
