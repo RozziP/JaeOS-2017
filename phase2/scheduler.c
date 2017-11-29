@@ -36,6 +36,7 @@ HIDDEN void currentProcCount(unsigned int x){
     return;
 }
 
+int remainingTime;
 /*
 *Takes a new job from the ready queue and runs it.
 *if there are no jobs on the readyqueue and we have nothing to run, the CPU halts
@@ -65,24 +66,29 @@ void scheduler()
 
         else
         {
-            setTIMER(endOfInterval-getTODLO());
-            wait(softBlockCnt);
-            wait(procCount);
+            //setTIMER(QUANTUM);
+
+            remainingTime=endOfInterval-getTODLO();
+
+            setTIMER(20*QUANTUM);
             
             setSTATUS((getSTATUS() & INTS_ON) | SYSMODE);
-            wait(0);
+            
+            wait(remainingTime);
             WAIT();
         }
 
     }
     //there are ready processes
     currentProc = removeProcQ(&readyQueue);
+
+    int timeDif= endOfInterval-getTODLO();
     
     //If there is less than than one quantum left on the clock
-    if((endOfInterval - getTODLO()) < QUANTUM){			
+    if(timeDif < QUANTUM){			
         
         //Set the new job's timer to be the remaining interval time
-        setTIMER(endOfInterval-getTODLO());
+        setTIMER(timeDif);
     }
     else
     {
@@ -90,8 +96,6 @@ void scheduler()
         setTIMER(QUANTUM);
     }
     
-    newProcBreak();
-
     startTimeOfDay = getTODLO();
 
     loadState(&(currentProc -> p_s));

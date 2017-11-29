@@ -34,6 +34,10 @@ void testBreak(unsigned int x, unsigned int y, unsigned int z){
 	return;
 }
 
+void testBreak2(unsigned int x, unsigned int y, unsigned int z){
+	return;
+}
+
 #define ALLOFF				0x00000000
 #define INTSDISABLED		0x000000C0
 
@@ -449,8 +453,6 @@ void p4() {
 
 	SYSCALL(VERHOGEN, (int)&endp4, 0, 0);				/* V(endp4)          */
 
-	print ("verhogened good\n");
-
 	testBreak(0x0,0,0);
 
 	SYSCALL(TERMINATETHREAD, 0, 0, 0);			/* terminate p4      */
@@ -546,17 +548,20 @@ void p5a() {
 void p5b() {
 	cpu_t		time1, time2;
 
-	testBreak(procCount, 1, 0);
+	testBreak2(procCount, 1, 0);
 	SYSCALL(9, 0, 0, 0);
-
-	testBreak(procCount,0,0);
+	
 	/* the first time through, we are in user mode */
 	/* and the P should generate a program trap */
 	SYSCALL(PASSERN, (int)&endp4, 0, 0);			/* P(endp4)*/
 
+
+
+
 	/* do some delay to be reasonably sure p4 and its offspring are dead */
 	time1 = 0;
 	time2 = 0;
+	softBlockCnt;
 	while (time2 - time1 < (CLOCKINTERVAL >> 1))  {
 		time1 = getTODLO();
 		SYSCALL(WAITCLOCK, 0, 0, 0);

@@ -43,6 +43,7 @@ HIDDEN void passUpOrDie(int cause);
 
 int lineNumber;
 int deviceNumber;
+int requestedSysCall;
 
 cput_t endTimeOfDay;
 cput_t timeUsed;
@@ -75,8 +76,7 @@ void prgrmTrapHandler()
 *if syscalls 9-255 were called at all, triggers a sys trap
 */
 void sysCallHandler(){
-    state_t* program;
-    int requestedSysCall; 
+    state_t* program; 
     
     state_t* callingProc = (state_t*) SYS_OLD; 
     
@@ -85,8 +85,10 @@ void sysCallHandler(){
 
     requestedSysCall = currentProc->p_s.a1;
 
+
+
     //Unauthorized access, shut it down
-    if((callingProc->cpsr & SYSMODE)!= SYSMODE)
+    if((callingProc->cpsr & SYSMODE)== SYSMODE)
     {
         //Direct to syscall
         switch(requestedSysCall)
@@ -212,7 +214,6 @@ HIDDEN void sys3(){
         //put on ready queue
         tempProc -> p_semAdd = NULL;
         insertProcQ(&(readyQueue), tempProc);
-        softBlockCnt=softBlockCnt-1;
         endTimeOfDay=getTODLO();
 
     }
@@ -241,7 +242,6 @@ HIDDEN void sys4(){
 
         //something controls sem
         insertBlocked(sem, currentProc);
-        softBlockCnt=softBlockCnt+1;
         scheduler();
     }
     //nothing controls sem
