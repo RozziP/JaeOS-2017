@@ -129,9 +129,8 @@ void sysCallHandler(){
             break;
         }
     }
-
     //if any of the syscalls 1-8 were called in user mode
-    if((requestedSysCall >= BIRTH) && (requestedSysCall <= IOWAIT))
+    else if((requestedSysCall >= BIRTH) && (requestedSysCall <= IOWAIT))
     {
         copyState((state_t*) SYS_OLD, (state_t*) PRGRM_OLD);
         ((state_t*)PRGRM_OLD )-> CP15_Cause = RI;
