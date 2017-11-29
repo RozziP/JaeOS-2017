@@ -263,8 +263,8 @@ HIDDEN void sys5()
             {
                 sys2(currentProc); //already called this once
             }
-            currentProc->sysCallNew=(state_t*)currentProc->p_s.a4;
-            currentProc->sysCallOld=(state_t*)currentProc->p_s.a3;
+            currentProc->sysCallNew = (state_t*)currentProc->p_s.a4;
+            currentProc->sysCallOld = (state_t*)currentProc->p_s.a3;
             break;
 
         case PRGRMTRAP: 
@@ -281,8 +281,8 @@ HIDDEN void sys5()
             {
                 sys2(currentProc); //already called this once
             }
-            currentProc->tlbNew=(state_t*) currentProc->p_s.a4;
-            currentProc->tlbOld=(state_t*) currentProc->p_s.a3;
+            currentProc->tlbNew = (state_t*)currentProc->p_s.a4;
+            currentProc->tlbOld = (state_t*)currentProc->p_s.a3;
             break;
     }
     loadState(&(currentProc->p_s));
@@ -436,16 +436,16 @@ HIDDEN void passUpOrDie(int cause){
         case SYSTRAP:  
             if(currentProc->sysCallOld != NULL){
                 //systrap called
-                copyState((state_t*)SYS_OLD, (state_t*) currentProc->sysCallOld);
-                copyState((state_t*) SYS_NEW, &currentProc -> p_s);
+                copyState((state_t*)SYS_OLD, (state_t*)currentProc->sysCallOld);
+                copyState((state_t*)sysCallNew, &(currentProc->p_s));
                 loadState(currentProc->sysCallNew);
             }
         break;
         case PRGRMTRAP:  
             if(currentProc->prgrmTrapOld != NULL){
                 //prgrmTrap called
-                copyState((state_t*) PRGRM_OLD, (state_t*) currentProc->prgrmTrapOld);
-                copyState((state_t*) PRGRM_NEW,  &currentProc -> p_s);
+                copyState((state_t*)PRGRM_OLD, (state_t*)currentProc->prgrmTrapOld);
+                copyState((state_t*)prgrmTrapNew,  &(currentProc->p_s));
                 loadState(currentProc->prgrmTrapNew);
             }
         break;
@@ -453,8 +453,8 @@ HIDDEN void passUpOrDie(int cause){
             if(currentProc -> tlbOld != NULL)
             {
                 //tlbTrap called
-                copyState((state_t*) TLB_OLD, (state_t*) currentProc->tlbOld);
-                copyState((state_t*) TLB_NEW,  &currentProc -> p_s);
+                copyState((state_t*)TLB_OLD, (state_t*)currentProc->tlbOld);
+                copyState((state_t*)tlbNew,  &(currentProc->p_s));
                 loadState(currentProc->tlbNew);
             }
         break;
