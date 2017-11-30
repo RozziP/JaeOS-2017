@@ -25,7 +25,6 @@ HIDDEN unsigned int getCause();
 HIDDEN int getLineNumber();
 HIDDEN int getDeviceNumber(int lineNum);
 HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex);
-HIDDEN void returnFromInterrupt();
 
 HIDDEN void intDebug(unsigned int x){
     return;
@@ -65,42 +64,50 @@ void interruptHandler()
     //Determine which line caused the interrupt
     if((cause & LINE2) == LINE2) //timer ran out
     {
-        if(endOfInterval <= getTODLO()){
-            pcb_PTR process = removeBlocked(&(sema4[48]));
-
-            while(process != NULL){
-				
+        if(endOfInterval <= getTODLO())
+        {
+            pcb_PTR process = removeBlocked(&(sema4[DEVICES-1]));
+            while(process != NULL)
+            {
 				process->p_semAdd = NULL;
 				softBlockCnt=softBlockCnt-1;
 				
-				/*Add it to the ready queue*/
+				//Add it to the ready queue
 				insertProcQ(&(readyQueue), process);
 				
-				/*Remove the next process*/
-				process = removeBlocked(&(sema4[48]));
+				//Remove the next process
+				process = removeBlocked(&(sema4[DEVICES-1]));
 			}
+            //Set the seamphore to zero
+			sema4[DEVICES-1] = 0;
 
-            /*Set the seamphore to zero*/
-			sema4[48] = 0;
-
-			/*Reload the interval timer*/
+			//reset the interval timer
 			setTIMER(QUANTUM);
-
             endOfInterval = getTODLO() + INT_TIME;
 			
-            returnFromInterrupt(&(currentProc->p_s));
-			
+            if(currentProc != NULL)
+            {
+                startTimeOfDay = getTODLO();
+
+                loadState(&(currentProc->p_s));
+            }
+            else
+            {
+                scheduler();
+            }
         }
+        else //a process' quantum ended
+        {
+            //stop it from running and put it back on the ready queue
+            if (currentProc != NULL)
+            {
+                insertProcQ(&(readyQueue),currentProc);
+                currentProc = NULL;
+            }
 
-        if (currentProc != NULL){
-            insertProcQ(&(readyQueue),currentProc);
-            currentProc = NULL;
-        }
-
-        setTIMER(QUANTUM);
-
-        scheduler();
-        
+            //reset the quantum timer and get a new job
+            setTIMER(QUANTUM);
+            scheduler();
     }
     else if((cause & LINE3) !=0)
     {

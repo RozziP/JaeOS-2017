@@ -47,8 +47,9 @@ int remainingTime;
 void scheduler()
 {   
     currentProcCount(procCount);
+    pcb_PTR newProc = reremoveProcQ(&readyQueue);
 
-    if(emptyProcQ(readyQueue))
+    if(newProc == NULL)
     {
         currentProc = NULL;
 
@@ -63,13 +64,10 @@ void scheduler()
             soft();
             PANIC();
         }
-
         else
         {
             //setTIMER(QUANTUM);
-
             //remainingTime=endOfInterval-getTODLO();
-
             //setTIMER(endOfInterval);
             
             setSTATUS((getSTATUS() & INTS_ON) | SYSMODE);
@@ -80,10 +78,13 @@ void scheduler()
 
     }
     //there are ready processes
-    currentProc = removeProcQ(&readyQueue);
+    currentProc = newProc;
 
-    int timeDif= endOfInterval-getTODLO();
-    
+    int timeDif = endOfInterval - getTODLO();
+    if  (timeDif < 0)
+    {
+        timeDif = 0;
+    }
     //If there is less than than one quantum left on the clock
     if(timeDif < QUANTUM){			
         
