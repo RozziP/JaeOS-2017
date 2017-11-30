@@ -67,8 +67,8 @@ void scheduler()
         else
         {
             //setTIMER(QUANTUM);
-            //remainingTime=endOfInterval-getTODLO();
-            //setTIMER(endOfInterval);
+            remainingTime=endOfInterval-getTODLO();
+            setTIMER(remainingTime);
             
             setSTATUS((getSTATUS() & INTS_ON) | SYSMODE);
             
