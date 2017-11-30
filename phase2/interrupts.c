@@ -25,9 +25,10 @@ HIDDEN unsigned int getCause();
 HIDDEN int getLineNumber();
 HIDDEN int getDeviceNumber(int lineNum);
 HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex);
-HIDDEN void finish()
+HIDDEN void finish();
 
-HIDDEN void intDebug(unsigned int x){
+HIDDEN void intDebug(unsigned int x)
+{
     return;
 }
 
@@ -65,43 +66,44 @@ void interruptHandler()
     //Determine which line caused the interrupt
     if((cause & LINE2) == LINE2) //timer ran out
     {
-        if(endOfInterval <= getTODLO())
-        {
-            pcb_PTR temp = removeBlocked(&(sema4[DEVICES-1]));
-
-            //While there are processes waiting on the clock
-            while(process != NULL)
+            if(endOfInterval <= getTODLO())
             {
-				temp->p_semAdd = NULL;
-				softBlockCnt--;
-				
-				//Add it to the ready queue
-				insertProcQ(&(readyQueue), temp);
-				
-				//Remove the next process
-				temp = removeBlocked(&(sema4[DEVICES-1]));
-			}
-            //Set the seamphore to zero bceuse we unblocked all processes
-			sema4[DEVICES-1] = 0;
+                pcb_PTR temp = removeBlocked(&(sema4[DEVICES-1]));
 
-			//reset the interval timer
-			setTIMER(QUANTUM);
-            endOfInterval = getTODLO() + INT_TIME;
-			
-            finish();
-        }
-        else //a process' quantum ended
-        {
-            //stop it from running and put it back on the ready queue
-            if (currentProc != NULL)
-            {
-                insertProcQ(&(readyQueue),currentProc);
-                currentProc = NULL;
+                //While there are processes waiting on the clock
+                while(temp != NULL)
+                {
+                    temp->p_semAdd = NULL;
+                    softBlockCnt--;
+                    
+                    //Add it to the ready queue
+                    insertProcQ(&(readyQueue), temp);
+                    
+                    //Remove the next process
+                    temp = removeBlocked(&(sema4[DEVICES-1]));
+                }
+                //Set the seamphore to zero bceuse we unblocked all processes
+                sema4[DEVICES-1] = 0;
+
+                //reset the interval timer
+                setTIMER(QUANTUM);
+                endOfInterval = getTODLO() + INT_TIME;
+                
+                finish();
             }
+            else //a process' quantum ended
+            {
+                //stop it from running and put it back on the ready queue
+                if (currentProc != NULL)
+                {
+                    insertProcQ(&(readyQueue),currentProc);
+                    currentProc = NULL;
+                }
 
-            //reset the quantum timer and get a new job
-            setTIMER(QUANTUM);
-            scheduler();
+                //reset the quantum timer and get a new job
+                setTIMER(QUANTUM);
+                scheduler();
+        }
     }
     else if((cause & LINE3) !=0)
     {

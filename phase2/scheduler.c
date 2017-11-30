@@ -47,7 +47,7 @@ int remainingTime;
 void scheduler()
 {   
     currentProcCount(procCount);
-    pcb_PTR newProc = reremoveProcQ(&readyQueue);
+    pcb_PTR newProc = removeProcQ(&readyQueue);
 
     if(newProc == NULL)
     {
