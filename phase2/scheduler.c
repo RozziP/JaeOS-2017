@@ -68,13 +68,13 @@ void scheduler()
         {
             //setTIMER(QUANTUM);
 
-            remainingTime=endOfInterval-getTODLO();
+            //remainingTime=endOfInterval-getTODLO();
 
-            setTIMER(20*QUANTUM);
+            //setTIMER(endOfInterval);
             
             setSTATUS((getSTATUS() & INTS_ON) | SYSMODE);
             
-            wait(remainingTime);
+            //wait(remainingTime);
             WAIT();
         }
 
