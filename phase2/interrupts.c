@@ -25,6 +25,7 @@ HIDDEN unsigned int getCause();
 HIDDEN int getLineNumber();
 HIDDEN int getDeviceNumber(int lineNum);
 HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex);
+HIDDEN void finish()
 
 HIDDEN void intDebug(unsigned int x){
     return;
@@ -66,35 +67,28 @@ void interruptHandler()
     {
         if(endOfInterval <= getTODLO())
         {
-            pcb_PTR process = removeBlocked(&(sema4[DEVICES-1]));
+            pcb_PTR temp = removeBlocked(&(sema4[DEVICES-1]));
+
+            //While there are processes waiting on the clock
             while(process != NULL)
             {
-				process->p_semAdd = NULL;
-				softBlockCnt=softBlockCnt-1;
+				temp->p_semAdd = NULL;
+				softBlockCnt--;
 				
 				//Add it to the ready queue
-				insertProcQ(&(readyQueue), process);
+				insertProcQ(&(readyQueue), temp);
 				
 				//Remove the next process
-				process = removeBlocked(&(sema4[DEVICES-1]));
+				temp = removeBlocked(&(sema4[DEVICES-1]));
 			}
-            //Set the seamphore to zero
+            //Set the seamphore to zero bceuse we unblocked all processes
 			sema4[DEVICES-1] = 0;
 
 			//reset the interval timer
 			setTIMER(QUANTUM);
             endOfInterval = getTODLO() + INT_TIME;
 			
-            if(currentProc != NULL)
-            {
-                startTimeOfDay = getTODLO();
-
-                loadState(&(currentProc->p_s));
-            }
-            else
-            {
-                scheduler();
-            }
+            finish();
         }
         else //a process' quantum ended
         {
@@ -141,6 +135,7 @@ void interruptHandler()
     //Calculate the device number, the device's semaphore index, and the device's register location
     deviceNum = getDeviceNumber(lineNum);
     if(deviceNum == -1) PANIC();
+    
     lineNum = lineNum - NULLLINES; 
     semIndex = lineNum * DEVICEPERLINE + deviceNum;
     deviceReg = (devreg_t*)getDeviceRegister(lineNum, semIndex);
@@ -164,7 +159,8 @@ void interruptHandler()
             deviceReg->term.recv_command = ACK;
         }
     }
-    else{
+    else
+    {
         status = deviceReg -> dtp.status;
         deviceReg->dtp.command = ACK;
     }
@@ -180,15 +176,13 @@ void interruptHandler()
             (temp->p_s).a1 = status;
             softBlockCnt--;
             insertProcQ(&(readyQueue), temp);
-            returnFromInterrupt();
         }
-        else{
+        else
+        {
             semaStat[semIndex] = status;
         }
     }
-        
-    returnFromInterrupt(&(currentProc->p_s));
-
+    finish();
 }
 
 
@@ -237,15 +231,15 @@ HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex)
     return registerLocation;
 }
 
-HIDDEN void returnFromInterrupt(){
-	
-	/*If processor wasn't waiting...*/
-	if(currentProc != NULL){
-		
-		
+HIDDEN void finish()
+{
+	if(currentProc != NULL)
+    {
+		startTimeOfDay = getTODLO();
 		loadState(&(currentProc->p_s));
 	}
-	
-	/*Otherwise, get a new job*/
-	scheduler();
+    else
+    {
+        scheduler();
+    }
 }
