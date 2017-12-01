@@ -27,14 +27,7 @@ HIDDEN int getDeviceNumber(int lineNum);
 HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex);
 HIDDEN void finish();
 
-HIDDEN void intDebug(unsigned int x)
-{
-    return;
-}
-
 unsigned int cause;
-
-
 
 void interruptHandler()
 {
@@ -97,7 +90,6 @@ void interruptHandler()
                 if (currentProc != NULL)
                 {
                     insertProcQ(&(readyQueue),currentProc);
-                    currentProc = NULL;
                 }
 
                 //reset the quantum timer and get a new job

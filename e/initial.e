@@ -14,14 +14,11 @@ extern pcb_PTR readyQueue;
 
 //time things
 extern cput_t startTimeOfDay;
-extern cput_t endTimeOfDay;
-extern cput_t timeUsed;
-extern cput_t timeLeft;
 extern cput_t endOfInterval;
 
 
-extern void initAreasBreak();
-
 extern void main();
+
 extern void copyState(state_t* src, state_t* dest);
+
 extern void loadState(state_t* stateToLoad);

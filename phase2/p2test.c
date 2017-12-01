@@ -30,14 +30,6 @@
 /* fin editing */
 
 
-void testBreak(unsigned int x, unsigned int y, unsigned int z){
-	return;
-}
-
-void testBreak2(unsigned int x, unsigned int y, unsigned int z){
-	return;
-}
-
 #define ALLOFF				0x00000000
 #define INTSDISABLED		0x000000C0
 
@@ -170,7 +162,6 @@ void print(char *msg) {
 void test() {	
 	
 	SYSCALL(VERHOGEN, (int)&testsem, 0, 0);					/* V(testsem)   */
-	initAreasBreak();
 	print("p1 v(testsem)\n");
 
 	/* set up states of the other processes */
@@ -453,8 +444,6 @@ void p4() {
 
 	SYSCALL(VERHOGEN, (int)&endp4, 0, 0);				/* V(endp4)          */
 
-	testBreak(0x0,0,0);
-
 	SYSCALL(TERMINATETHREAD, 0, 0, 0);			/* terminate p4      */
 
 	/* just did a SYS2, so should not get to this point */
@@ -548,7 +537,6 @@ void p5a() {
 void p5b() {
 	cpu_t		time1, time2;
 
-	testBreak2(procCount, 1, 0);
 	SYSCALL(9, 0, 0, 0);
 	
 	/* the first time through, we are in user mode */

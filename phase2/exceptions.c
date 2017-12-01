@@ -48,9 +48,6 @@ int requestedSysCall;
 cput_t endTimeOfDay;
 cput_t timeUsed;
 
-HIDDEN void exBreak(unsigned int x){
-    return;
-}
 
 /*
 *Pass up a TLB trap to it's secondary exception vector.
@@ -126,7 +123,6 @@ void sysCallHandler(){
             break;
 
             default: //everything else
-                exBreak(0x900000);
                 passUpOrDie(SYSTRAP);
             break;
         }
@@ -135,9 +131,9 @@ void sysCallHandler(){
     else if((requestedSysCall >= BIRTH) && (requestedSysCall <= IOWAIT))
     {
         copyState((state_t*) SYS_OLD, (state_t*) PRGRM_OLD);
+        
         ((state_t*)PRGRM_OLD )-> CP15_Cause = RI;
 
-        exBreak(0x800000);
         prgrmTrapHandler();
     }
 
@@ -185,12 +181,7 @@ HIDDEN void sys1(){
  */
 HIDDEN void sys2(){
     //end the bloodline
-    exBreak(procCount);
-    exBreak(softBlockCnt);
     killAllChildren(currentProc);
-    exBreak(procCount);
-    exBreak(softBlockCnt);
-    currentProc=NULL;
     scheduler();
 }
 
@@ -254,7 +245,6 @@ HIDDEN void sys4(){
  */
 HIDDEN void sys5()
 {
-    exBreak(currentProc->p_s.a2);
     switch(currentProc->p_s.a2)
     {
         case SYSTRAP:
@@ -331,7 +321,6 @@ HIDDEN void sys7()
         
         //Block the process
         insertBlocked(&(sema4[clockSem]), currentProc);
-        currentProc = NULL;
         softBlockCnt++;
         
         scheduler();
@@ -375,7 +364,6 @@ HIDDEN void sys8(){
 
         insertBlocked(sem, currentProc);
         softBlockCnt++;
-        currentProc=NULL;
         scheduler();
     }
     currentProc->p_s.a1 = semaStat[index];

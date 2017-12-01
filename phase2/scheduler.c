@@ -17,24 +17,6 @@
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
 
-HIDDEN void wait(unsigned int x){
-    return;
-}
-
-HIDDEN void soft(){
-    return;
-}
-
-HIDDEN void procZero(){
-    return;
-}
-HIDDEN void newProcBreak(){
-    return;
-}
-
-HIDDEN void currentProcCount(unsigned int x){
-    return;
-}
 
 int remainingTime;
 /*
@@ -46,33 +28,40 @@ int remainingTime;
 */
 void scheduler()
 {   
-    currentProcCount(procCount);
+    currentProc = NULL;
     pcb_PTR newProc = removeProcQ(&readyQueue);
 
-    if(newProc == NULL)
+    if(newProc == NULL) //see if processes are ready to run
     {
-        currentProc = NULL;
 
         if(procCount == 0)
         {
-            procZero();
+            // if no processes left system is done
+
             HALT();
         }
 
         else if(softBlockCnt == 0)
         {
-            soft();
+            // if processes exist but none are ready and none are softblocked, dead lock has occured
+
             PANIC();
         }
         else
         {
-            //setTIMER(QUANTUM);
-            remainingTime=endOfInterval-getTODLO();
+            // processes exist but all are waiting and atleast 1 is waiting for IO
+            if (endOfInterval>getTODLO()){
+                remainingTime = endOfInterval - getTODLO();
+            }
+            else{
+                remainingTime = 0;
+            }
+            
             setTIMER(remainingTime);
             
             setSTATUS((getSTATUS() & INTS_ON) | SYSMODE);
             
-            //wait(remainingTime);
+    
             WAIT();
         }
 
@@ -100,10 +89,6 @@ void scheduler()
     startTimeOfDay = getTODLO();
 
     loadState(&(currentProc -> p_s));
-
-        
-    
-    
         
 }
 

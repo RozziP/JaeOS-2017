@@ -22,12 +22,6 @@
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
 
-HIDDEN void initArea(state_t* newArea);
-
-void initAreasBreak(){
-    return;
-}
-
 int procCount;
 int softBlockCnt;
 int sema4[DEVICES];
@@ -36,7 +30,6 @@ pcb_PTR currentProc;
 pcb_PTR readyQueue;
 cput_t startTimeOfDay = 0;
 cput_t endOfInterval;
-int timerFlag;
 
 /*
 *Boot function for the OS
@@ -55,8 +48,6 @@ void main()
     softBlockCnt = 0;
     currentProc  = NULL;
     readyQueue   = mkEmptyProcQ();
-
-    initAreasBreak();
 
     /*
     Create the new areas, initialize them with VM off, 
