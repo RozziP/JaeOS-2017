@@ -68,8 +68,8 @@ void prgrmTrapHandler()
 }
 
 /*
-*Calls a different function based on the requested syscall
-*If syscalls 1-8 were called in user mode, triggers a program trap
+*Calls a different syscall function based on the requested syscall
+*If syscalls 1-8 were called in user mode, simulate a program trap
 *if syscalls 9-255 were called at all, triggers a sys trap
 */
 void sysCallHandler(){
@@ -121,10 +121,7 @@ void sysCallHandler(){
             case IOWAIT:
                 sys8();
             break;
-
-            default: //everything else
-                passUpOrDie(SYSTRAP);
-            break;
+            
         }
     }
     //if any of the syscalls 1-8 were called in user mode
@@ -165,12 +162,14 @@ HIDDEN void sys1(){
 
         //Make new process a progeny of the callingProcess
         insertChild(currentProc, newPCB);
+
         //put it on the ready queue
         insertProcQ(&readyQueue, newPCB);
+
         //copy the old state into the new process
         copyState((state_t *)currentProc->p_s.a2, &(newPCB->p_s));
     }
-    //load the current/new process
+    //load the current proc
     loadState(&(currentProc->p_s));
 }
 

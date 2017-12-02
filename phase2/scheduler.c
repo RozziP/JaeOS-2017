@@ -49,7 +49,9 @@ void scheduler()
         }
         else
         {
-            // processes exist but all are waiting and atleast 1 is waiting for IO
+            // processes exist but all are waiting and 1 or more is waiting for IO
+
+            //Calculate time left before next psudo clock tic
             if (endOfInterval>getTODLO()){
                 remainingTime = endOfInterval - getTODLO();
             }
@@ -60,20 +62,23 @@ void scheduler()
             setTIMER(remainingTime);
             
             setSTATUS((getSTATUS() & INTS_ON) | SYSMODE);
-            
     
             WAIT();
         }
 
     }
     //there are ready processes
+
     currentProc = newProc;
 
+
+    //Calculat time left until psudo clock tic
     int timeDif = endOfInterval - getTODLO();
     if  (timeDif < 0)
     {
         timeDif = 0;
     }
+
     //If there is less than than one quantum left on the clock
     if(timeDif < QUANTUM){			
         
