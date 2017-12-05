@@ -181,6 +181,7 @@ HIDDEN void sys1(){
 HIDDEN void sys2(){
     //end the bloodline
     killAllChildren(currentProc);
+    currentProc = NULL;
     scheduler();
 }
 
@@ -202,12 +203,11 @@ HIDDEN void sys3(){
         tempProc = removeBlocked(sem);
         
         //put on ready queue
-        tempProc -> p_semAdd = NULL;
+        tempProc->p_semAdd = NULL;
         insertProcQ(&(readyQueue), tempProc);
         endTimeOfDay=getTODLO();
 
     }
-
     //send back to caller
     loadState(&(currentProc->p_s));
 }
@@ -393,7 +393,7 @@ HIDDEN void killAllChildren(pcb_PTR top)
         }
         else //it's not softblocked
         {
-            *sem = *sem+1;
+            *sem++;
         }
    }
    else if(top == currentProc) //is our node the current process?
@@ -407,7 +407,7 @@ HIDDEN void killAllChildren(pcb_PTR top)
 
    //RIP
    freePcb(top);
-   procCount = procCount-1;
+   procCount--;
    
 }
 
