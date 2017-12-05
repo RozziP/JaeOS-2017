@@ -181,7 +181,6 @@ HIDDEN void sys1(){
 HIDDEN void sys2(){
     //end the bloodline
     killAllChildren(currentProc);
-    currentProc = NULL;
     scheduler();
 }
 
