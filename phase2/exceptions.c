@@ -392,7 +392,7 @@ HIDDEN void killAllChildren(pcb_PTR top)
         }
         else //it's not softblocked
         {
-            *sem++;
+            (*sem)++;
         }
    }
    else if(top == currentProc) //is our node the current process?

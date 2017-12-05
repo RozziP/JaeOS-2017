@@ -28,12 +28,11 @@ int remainingTime;
 */
 void scheduler()
 {   
-    currentProc = NULL;
     pcb_PTR newProc = removeProcQ(&readyQueue);
-
+    
     if(newProc == NULL) //see if processes are ready to run
     {
-
+        currentProc = NULL;
         if(procCount == 0)
         {
             // if no processes left system is done
