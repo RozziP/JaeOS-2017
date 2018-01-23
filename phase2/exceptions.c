@@ -17,7 +17,6 @@
   Sys8: Performs a wait operaton on a device semaphore
 
   Authors: Peter Rozzi and Patrick Gemperline
-  Date: 11-23-17
 \*==========================================================================*/
 
 #include "../e/asl.e"
@@ -41,12 +40,12 @@ HIDDEN void sys8();
 HIDDEN void killAllChildren(pcb_PTR top);
 HIDDEN void passUpOrDie(int cause);
 
-int lineNumber;
-int deviceNumber;
-int requestedSysCall;
+HIDDEN int lineNumber;
+HIDDEN int deviceNumber;
+HIDDEN int requestedSysCall;
 
-cput_t endTimeOfDay;
-cput_t timeUsed;
+HIDDEN cput_t endTimeOfDay;
+HIDDEN cput_t timeUsed;
 
 
 /*
@@ -78,7 +77,7 @@ void sysCallHandler(){
     state_t* callingProc = (state_t*) SYS_OLD; 
     
 
-    copyState((state_t*) SYS_OLD, &(currentProc -> p_s));
+    copyState((state_t*) SYS_OLD, &(currentProc->p_s));
 
     requestedSysCall = currentProc->p_s.a1;
 
@@ -306,19 +305,19 @@ HIDDEN void sys7()
 {
     int clockSem = DEVICES-1;
     //decrement clock semaphore
-    sema4[clockSem] = sema4[clockSem] - 1;
+    deviceSema[clockSem] = deviceSema[clockSem] - 1;
 
-    if(sema4[clockSem] < 0)
+    if(deviceSema[clockSem] < 0)
     {                      
         //Store ending time of day
         endTimeOfDay=getTODLO();
         
         //Store elapsed time
         timeUsed = endTimeOfDay - startTimeOfDay;
-        currentProc -> p_time = currentProc -> p_time + timeUsed;
+        currentProc->p_time = currentProc->p_time + timeUsed;
         
         //Block the process
-        insertBlocked(&(sema4[clockSem]), currentProc);
+        insertBlocked(&(deviceSema[clockSem]), currentProc);
         softBlockCnt++;
         
         scheduler();
@@ -348,7 +347,7 @@ HIDDEN void sys8(){
     index = DEVICEPERLINE * (lineNumber - NULLLINES) + deviceNumber + DEVICEPERLINE;
 
 
-    sem = &(sema4[index]);
+    sem = &(deviceSema[index]);
     *sem = *sem-1;
 
     if (*sem < 0){
@@ -358,7 +357,7 @@ HIDDEN void sys8(){
         
         //Save the time used since last recording
         timeUsed = endTimeOfDay - startTimeOfDay;
-        currentProc -> p_time = currentProc -> p_time + timeUsed;
+        currentProc->p_time = currentProc->p_time + timeUsed;
 
         insertBlocked(sem, currentProc);
         softBlockCnt++;
@@ -386,7 +385,7 @@ HIDDEN void killAllChildren(pcb_PTR top)
    {
         outBlocked(top);
         //is it on a device semaphore?
-        if((sem >= &(sema4[0])) && (sem <= &(sema4[DEVICES-1])))
+        if((sem >= &(deviceSema[0])) && (sem <= &(deviceSema[DEVICES-1])))
         {
             softBlockCnt--; //not anymore
         }
@@ -435,7 +434,7 @@ HIDDEN void passUpOrDie(int cause){
             }
         break;
         case TLBTRAP:  
-            if(currentProc -> tlbOld != NULL)
+            if(currentProc->tlbOld != NULL)
             {
                 //tlbTrap called
                 copyState((state_t*)TLB_OLD, (state_t*)currentProc->tlbOld);

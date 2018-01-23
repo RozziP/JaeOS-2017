@@ -10,7 +10,6 @@
   unblocking a process from it.
 
   Authors: Peter Rozzi and Patrick Gemperline
-  Date: 11-23-17
 \*==========================================================================*/
 #include "../e/asl.e"
 #include "../e/pcb.e"
@@ -27,11 +26,10 @@ HIDDEN int getDeviceNumber(int lineNum);
 HIDDEN unsigned int getDeviceRegister(int lineNum, int semIndex);
 HIDDEN void finish();
 
-unsigned int cause;
 
 void interruptHandler()
 {
-    cause = ((state_t*)INT_OLD) -> CP15_Cause >> 24; //shift right by 24 bits for comparison
+    unsigned int cause;
     int lineNum;
     int status;
     int deviceNum; 
@@ -40,7 +38,9 @@ void interruptHandler()
     cput_t endTimeOfDay;
     cput_t timeUsed;
     devreg_t* deviceReg;
-    ((state_t*)INT_OLD) -> pc = ((state_t*)INT_OLD) -> pc -4; //Go back to the executing instruction after interrupt
+    ((state_t*)INT_OLD)->pc=((state_t*)INT_OLD)->pc-4;//Go back to the executing instruction after interrupt
+    cause = ((state_t*)INT_OLD)->CP15_Cause>>24; //shift right by 24 bits for comparison
+
 
    
     //if there was a process running, we have to manage its timer
@@ -61,7 +61,7 @@ void interruptHandler()
     {
             if(endOfInterval <= getTODLO())
             {
-                pcb_PTR temp = removeBlocked(&(sema4[DEVICES-1]));
+                pcb_PTR temp = removeBlocked(&(deviceSema[DEVICES-1]));
 
                 //While there are processes waiting on the clock
                 while(temp != NULL)
@@ -73,10 +73,10 @@ void interruptHandler()
                     insertProcQ(&(readyQueue), temp);
                     
                     //Remove the next process
-                    temp = removeBlocked(&(sema4[DEVICES-1]));
+                    temp = removeBlocked(&(deviceSema[DEVICES-1]));
                 }
                 //Set the seamphore to zero bceuse we unblocked all processes
-                sema4[DEVICES-1] = 0;
+                deviceSema[DEVICES-1] = 0;
 
                 //reset the interval timer
                 setTIMER(QUANTUM);
@@ -139,7 +139,7 @@ void interruptHandler()
     {
         
         //the terminal was writing
-        if(((deviceReg -> term.transm_status) & 0xF) != READY)
+        if(((deviceReg->term.transm_status) & 0xF) != READY)
         {
             
             semIndex = semIndex + DEVICEPERLINE;
@@ -155,15 +155,15 @@ void interruptHandler()
     }
     else
     {
-        status = deviceReg -> dtp.status;
+        status = deviceReg->dtp.status;
         deviceReg->dtp.command = ACK;
     }
 
     //signal the device's semaphore
-    sema4[semIndex] = sema4[semIndex] + 1;
-    if(sema4[semIndex] <= 0)
+    deviceSema[semIndex] = deviceSema[semIndex] + 1;
+    if(deviceSema[semIndex] <= 0)
     {
-        pcb_PTR temp = removeBlocked(&(sema4[semIndex]));
+        pcb_PTR temp = removeBlocked(&(deviceSema[semIndex]));
         if(temp != NULL)
         {
             temp->p_semAdd = NULL;

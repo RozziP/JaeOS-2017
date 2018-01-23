@@ -4,10 +4,9 @@
   process execution.
 
   The scheduler ensures that there is always a process that is either running,
-  or waiting on I/O
+  or waiting on I/O by using a round-robin scheduing algorithm.
   
   Authors: Peter Rozzi and Patrick Gemperline
-  Date: 10-24-17
 \*==========================================================================*/
 #include "../e/asl.e"
 #include "../e/pcb.e"
@@ -18,7 +17,6 @@
 #include "/usr/include/uarm/libuarm.h"
 
 
-int remainingTime;
 /*
 *Takes a new job from the ready queue and runs it.
 *if there are no jobs on the readyqueue and we have nothing to run, the CPU halts
@@ -28,6 +26,9 @@ int remainingTime;
 */
 void scheduler()
 {   
+    int remainingTime;
+    int timeDif;
+
     pcb_PTR newProc = removeProcQ(&readyQueue);
     
     if(newProc == NULL) //see if processes are ready to run
@@ -72,7 +73,7 @@ void scheduler()
 
 
     //Calculat time left until psudo clock tic
-    int timeDif = endOfInterval - getTODLO();
+    timeDif = endOfInterval - getTODLO();
     if  (timeDif < 0)
     {
         timeDif = 0;
@@ -92,7 +93,7 @@ void scheduler()
     
     startTimeOfDay = getTODLO();
 
-    loadState(&(currentProc -> p_s));
+    loadState(&(currentProc->p_s));
         
 }
 

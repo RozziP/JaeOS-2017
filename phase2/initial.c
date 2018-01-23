@@ -7,7 +7,6 @@
   Then, creates the initial process and calls the scheduler.
   
   Authors: Peter Rozzi and Patrick Gemperline
-  Date: 10-24-17
 \*==========================================================================*/
 
 #include "../e/asl.e"
@@ -22,9 +21,11 @@
 #include "../h/types.h"
 #include "/usr/include/uarm/libuarm.h"
 
+
+//Create globals
 int procCount;
 int softBlockCnt;
-int sema4[DEVICES];
+int deviceSema[DEVICES];
 int semaStat[DEVICES];
 pcb_PTR currentProc;
 pcb_PTR readyQueue;
@@ -81,7 +82,7 @@ void main()
     int i = 0;
     while(i < DEVICES)
     {
-        sema4[i] = 0;
+        deviceSema[i] = 0;
         i++;
     }
 
