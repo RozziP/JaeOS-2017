@@ -60,6 +60,4 @@ typedef struct {
 	unsigned int d_data1;
 } device_t;
 
-
-
 #endif
