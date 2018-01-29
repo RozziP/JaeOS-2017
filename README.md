@@ -8,6 +8,6 @@ Processes are represented as process control blocks(PCBs) stored in circular dou
 
 Mutual exclusion is facilitated with the use of semaphores, which are represented as integers and stored in stacks.
 
-### JaeOS manuals here -> https://github.com/RozziP/JaeOS-2017/tree/master/info
+### JaeOS manuals here -> https://github.com/RozziP/JaeOS-2017/tree/master/Info
 
 ### SysCall 2 Video here -> https://www.youtube.com/watch?v=aB96hdTeYZY
